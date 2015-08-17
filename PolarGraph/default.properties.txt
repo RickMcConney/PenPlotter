@@ -1,0 +1,24 @@
+#Polar Proerties
+#Sun Aug 16 10:31:21 CDT 2015
+com.baudrate=115200
+com.serialPort=1
+image.cropBottom=220
+image.cropLeft=120
+image.cropRight=320
+image.cropTop=20
+image.name=C\:\\Users\\Rick\\Desktop\\p2\\data\\rick520.jpg
+image.pixelSize=10
+image.scale=0.982
+machine.height=900
+machine.homepoint.y=250
+machine.motors.maxSpeed=1010
+machine.motors.mmPerRev=80.0
+machine.motors.stepsPerRev=6400.0
+machine.offX=14
+machine.offY=17
+machine.penSize=0.5
+machine.width=840
+machine.zoomScale=0.67386675
+svg.UserScale=0.982
+svg.name=C\:\\Users\\Rick\\Desktop\\p2\\data\\rick520.jpg
+svg.pixelsPerInch=72.0
