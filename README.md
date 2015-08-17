@@ -61,7 +61,7 @@ The firmware is compiled using the arduino IDE. Download the code and load the R
 #Not so obvious GUI controls 
 -	There is a status line right under the connect menu that shows the last command sent to the plotter
 -	The little blue circles at the top represent the motors and will go red when the motors are powered. Hit motor off button to idle the motors.
--	The little square control handles can be dragged to change the Y position and machine with and height
+-	The little square control handles can be dragged to change the Y position and machine width and height
 -	The gondola can be dragged around the page and the plotter will move to the new point.
 -	You can adjust the placement of the plot on the page by dragging on the page canvas with the right mouse button down.
 -	You can scale the page view with the scroll wheel
