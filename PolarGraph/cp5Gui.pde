@@ -171,6 +171,7 @@ void createcp5GUI()
   addButton("goHome", "Go Home", leftMargin, posY+=ySpace);
   addButton("off", "Motors Off", leftMargin, posY+=ySpace);
   addButton("save", "Save", leftMargin, posY+=ySpace);
+  addButton("export", "Export",leftMargin, posY+=ySpace);
 
 
 
@@ -347,6 +348,11 @@ void off()
 void save()
 {
   saveProperties();
+}
+
+void export()
+{
+  exportGcode();
 }
 
 void speedChanged(int speed)

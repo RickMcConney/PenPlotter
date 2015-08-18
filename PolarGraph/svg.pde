@@ -197,6 +197,28 @@ void loadTestFile()
 	sh = loadShapeFromFile(svgName);
 }
 
+void exportGcode()
+{
+  SwingUtilities.invokeLater(new Runnable() 
+  {
+    public void run() {
+      JFileChooser fc = new JFileChooser();
+      if(svgName != null)
+      {
+        int dot = svgName.indexOf('.');
+        fc.setSelectedFile(new File(svgName));
+      }
+      fc.setDialogTitle("Export file...");
+
+      int returned = fc.showSaveDialog(frame);
+      if (returned == JFileChooser.APPROVE_OPTION) 
+      {
+        File file = fc.getSelectedFile();
+      }
+    }
+  });
+}
+
 void loadVectorFile()
 {
 

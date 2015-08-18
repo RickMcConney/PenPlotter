@@ -16,7 +16,7 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 final static String ICON  = "icons/penDown.png";
-final static String TITLE = "Polar";
+final static String TITLE = "PolarGraph v0.1";
 
 ControlP5 cp5;
 Handle[] handles;
