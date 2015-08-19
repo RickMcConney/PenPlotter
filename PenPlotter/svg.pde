@@ -131,6 +131,7 @@ void plotLine()
 
 void exportSvg(File file)
 {
+    if(optimizedPaths == null) return;
     BufferedWriter writer = null;
     try{
      writer = new BufferedWriter( new FileWriter( file));
