@@ -7,6 +7,8 @@ import java.util.Properties;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import javax.swing.SwingUtilities;
 import javax.swing.JFileChooser;
 import java.util.Map;
@@ -16,7 +18,7 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 final static String ICON  = "icons/penDown.png";
-final static String TITLE = "PolarGraph v0.1";
+final static String TITLE = "PenPlotter v0.1";
 
 ControlP5 cp5;
 Handle[] handles;

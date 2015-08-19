@@ -129,6 +129,68 @@ void plotLine()
 	}
 }
 
+void exportSvg(File file)
+{
+    BufferedWriter writer = null;
+    try{
+     writer = new BufferedWriter( new FileWriter( file));
+
+  for(int i = 0;i<optimizedPaths.size();i++)
+  {
+    Path p = optimizedPaths.get(i);
+    if(i == 0)
+    {
+       writer.write("G21\n"); //mm
+      writer.write("G90\n"); // absolute
+      writer.write("G0 F"+speedValue+"\n");
+    }
+    for(int j = 0;j<p.size()-1;j++)
+    {
+
+      float x1 = p.getPoint(j).x*svgScale*svgUserScale+offX;
+      float y1 =  p.getPoint(j).y*svgScale*svgUserScale+offY;
+      float x2 = p.getPoint(j+1).x*svgScale*svgUserScale+offX;
+      float y2 =  p.getPoint(j+1).y*svgScale*svgUserScale+offY;
+
+
+      if(j == 0)
+      {
+        // pen up
+        writer.write("G0 Z5\n");
+        writer.write("G0 X"+x1 +" Y"+y1+"\n");
+        //pen Down
+        writer.write("G0 Z0\n");
+      }
+
+      writer.write("G1 X"+x2 +" Y"+y2+"\n");
+    }
+  }
+
+
+  float x1 = 0;
+  float y1 = 0;
+
+    writer.write("G0 Z5\n");
+    writer.write("G0 X"+x1 +" Y"+y1+"\n");
+    writer.write("M84\n");
+    }catch ( IOException e)
+    {
+      System.out.print(e);
+    }
+  finally
+{
+    try
+    {
+        if ( writer != null)
+        writer.close( );
+    }
+    catch ( IOException e)
+    {
+    }
+}
+
+}
+
 void plotSvg()
 {
 	if(sh != null)
@@ -214,6 +276,7 @@ void exportGcode()
       if (returned == JFileChooser.APPROVE_OPTION) 
       {
         File file = fc.getSelectedFile();
+        exportSvg(file);
       }
     }
   });
@@ -302,27 +365,28 @@ void optimize()
 
 	println("number of paths "+remainingPaths.size());
 
-	Path path = nearestPath(0,0);
+	Path path = nearestPath(homeX,homeY);
 	optimizedPaths.add(path); 
 
 	int numPaths = remainingPaths.size();
 	for(int i = 0;i<numPaths;i++)
 	{
-		Path lastPath = optimizedPaths.get(i);
-		RPoint last = lastPath.last();
-		Path npath = nearestPath(last.x,last.y);
-		optimizedPaths.add(npath); 
+		RPoint last = path.last();
+		path = nearestPath(last.x,last.y);
+		optimizedPaths.add(path); 
 	}
 
-	remainingPaths = optimizedPaths;
-	optimizedPaths = new ArrayList<Path>();
 
-	mergePaths(3);
-	println("number of optimized paths "+optimizedPaths.size());
+          remainingPaths = optimizedPaths;
+          optimizedPaths = new ArrayList<Path>();
 
-	println("number of points "+totalPoints(optimizedPaths));  
-	removeShort(1);
-	println("number of opt points "+totalPoints(optimizedPaths));
+	  mergePaths(3);
+	  println("number of optimized paths "+optimizedPaths.size());
+
+	  println("number of points "+totalPoints(optimizedPaths));  
+	  removeShort(1);
+	  println("number of opt points "+totalPoints(optimizedPaths));
+
 
 }
 
@@ -397,6 +461,7 @@ Path nearestPath(float x, float y)
 			index = i;
 		}
 	}
+
 	Path p = remainingPaths.remove(index);
 	if(reverse)
 		p.reverse();

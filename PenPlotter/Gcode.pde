@@ -35,6 +35,7 @@ void loadGcode(String fileName)
   catch(Exception e)
   {  
     println(e);
+    e.printStackTrace();
   }
   println("Loaded "+gcodePaths.size()+" Paths");
   for (int i = 0; i<gcodePaths.size (); i++)
@@ -294,12 +295,14 @@ double startAngle, double endAngle, double sweep, int numPoints) {
 void addLine(int step, int c, float lastX, float lastY, float lastZ, float x, float y, float z) 
 {
 
-  if (c == BLUE)
+  if (c == BLUE || gcodePath == null)
   {
     gcodePath = new Path();
     gcodePaths.add(gcodePath);
   }
+    
   gcodePath.addPoint(x, y);
+
 }
 
 void rotateGcode(int rotation)
