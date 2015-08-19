@@ -140,7 +140,7 @@ void exportSvg(File file)
     Path p = optimizedPaths.get(i);
     if(i == 0)
     {
-       writer.write("G21\n"); //mm
+      writer.write("G21\n"); //mm
       writer.write("G90\n"); // absolute
       writer.write("G0 F"+speedValue+"\n");
     }
@@ -157,12 +157,12 @@ void exportSvg(File file)
       {
         // pen up
         writer.write("G0 Z5\n");
-        writer.write("G0 X"+x1 +" Y"+y1+"\n");
+        writer.write("G0 X"+nf(x1,0,3) +" Y"+nf(y1,0,3)+"\n");
         //pen Down
         writer.write("G0 Z0\n");
       }
 
-      writer.write("G1 X"+x2 +" Y"+y2+"\n");
+      writer.write("G1 X"+nf(x2,0,3) +" Y"+nf(y2,0,3)+"\n");
     }
   }
 
@@ -172,7 +172,7 @@ void exportSvg(File file)
 
     writer.write("G0 Z5\n");
     writer.write("G0 X"+x1 +" Y"+y1+"\n");
-    writer.write("M84\n");
+
     }catch ( IOException e)
     {
       System.out.print(e);
@@ -267,8 +267,11 @@ void exportGcode()
       JFileChooser fc = new JFileChooser();
       if(svgName != null)
       {
+        String name = svgName;
         int dot = svgName.indexOf('.');
-        fc.setSelectedFile(new File(svgName));
+        if(dot > 0)
+          name = svgName.substring(0,dot)+".gcode";
+        fc.setSelectedFile(new File(name));
       }
       fc.setDialogTitle("Export file...");
 
