@@ -31,13 +31,14 @@ Next I wrote a simpler version of the controller that speaks gcode and uses mm u
   - The optimizer will auto join paths that touch.
   - The optimizer will remove very short lines in a path
   - Svg files can be scaled and rotated by multiples of 90 
+  - Export svg file to gcode
 - Supports Image files (.jpg, .png, .tga, .gif)
   - The image preview shows how the pixel size and pen width will affect the plot.
   - Images can be cropped, scaled and rotated by multiples of 90 degrees
 - The controller runs in processing 2 or processing 3
 
 #Compiling
-The controller can be compiled in processing 2 or 3 just download the source files and open PolarGraph.pde in processing.
+The controller can be compiled in processing 2 or 3 just download the source files and open PenPlotter.pde in processing.
 The code is dependent of the controlP5 and geomerative libraries go to the processing sketch import library menu to import them before compiling.
 
 The firmware is compiled using the arduino IDE. Download the code and load the Repitier.ino into arduino. I have only tested with the mega board with the ramps 1.4 shield. However repetier works with many boards so you may need to change the board type in the configuration.h file if you are using a different board.
