@@ -1,5 +1,5 @@
-# PolarGraph
-Polar graph controller that uses repetier firmware. Inspired by work at http://www.polargraph.co.uk
+# PenPlotter
+PenPlotter controller that uses repetier firmware. Inspired by work at http://www.polargraph.co.uk
 
 I built a plotter like the one described on the polargraph site. I thought it would be a good way to play around with stepper motor control. The software provided by the site worked great, but I wanted to play around with creating my own version to better understand the controls.
 
