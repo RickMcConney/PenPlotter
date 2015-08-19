@@ -18,10 +18,11 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 final static String ICON  = "icons/penDown.png";
-final static String TITLE = "PenPlotter v0.1";
+final static String TITLE = "PenPlotter v0.2";
 
 ControlP5 cp5;
 Handle[] handles;
+float cncSafeHeight = 5;
 float currentX = 420;
 float currentY = 250;
 int stickX;
@@ -141,6 +142,7 @@ void setup() {
   svgDpi = Float.parseFloat(props.getProperty("svg.pixelsPerInch"));
   svgScale = 25.4f/svgDpi;
   svgName = props.getProperty("svg.name");
+  cncSafeHeight = Float.parseFloat(props.getProperty("cnc.safeHeight"));
 
 
   baudRate = Long.parseLong(props.getProperty("com.baudrate"));

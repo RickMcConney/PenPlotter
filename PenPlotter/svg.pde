@@ -157,7 +157,7 @@ void exportSvg(File file)
       if(j == 0)
       {
         // pen up
-        writer.write("G0 Z5\n");
+        writer.write("G0 Z"+cncSafeHeight+"\n");
         writer.write("G0 X"+nf(x1,0,3) +" Y"+nf(y1,0,3)+"\n");
         //pen Down
         writer.write("G0 Z0\n");
@@ -171,7 +171,7 @@ void exportSvg(File file)
   float x1 = 0;
   float y1 = 0;
 
-    writer.write("G0 Z5\n");
+    writer.write("G0 Z"+cncSafeHeight+"\n");
     writer.write("G0 X"+x1 +" Y"+y1+"\n");
 
     }catch ( IOException e)
