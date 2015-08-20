@@ -228,16 +228,25 @@ void rotateSvg(int rotation)
 
 void drawSvg()
 {
-	stroke(penColor);
+        lastX = homeX;
+        lastY = homeY;
 	strokeWeight(0.1);
 	noFill();
 	for(int i = 0; i<optimizedPaths.size(); i++){
 		Path p = optimizedPaths.get(i);
+    
+                stroke(0,255,0);
+
+                sline(lastX*svgScale*svgUserScale+homeX+offX,lastY*svgScale*svgUserScale+homeY+offY,p.getPoint(0).x*svgScale*svgUserScale+homeX+offX,p.getPoint(0).y*svgScale*svgUserScale+homeY+offY);
+                
+                stroke(penColor);
 		beginShape();
 		for(int j = 0; j<p.size(); j++){
 			vertex(scaleX(p.getPoint(j).x*svgScale*svgUserScale+homeX+offX), scaleY(p.getPoint(j).y*svgScale*svgUserScale+homeY+offY));
 		}
 		endShape();
+                lastX = p.getPoint(p.size()-1).x;
+                lastY = p.getPoint(p.size()-1).y;
 
 	}
 }
@@ -355,6 +364,19 @@ class VectorFileFilter extends javax.swing.filechooser.FileFilter
 	}
 }
 
+void totalPathLength()
+{
+    long total = 0;
+    for(int i = 0; i<optimizedPaths.size(); i++){
+      Path p = optimizedPaths.get(i);
+      for(int j = 1; j<p.size(); j++){
+        RPoint p1 = p.getPoint(j-1);
+        RPoint p2 = p.getPoint(j);
+        total += dist(p1.x,p1.y,p2.x,p2.y);
+      }
+    }
+    System.out.println("total Path length "+total);
+}
 void optimize()
 {
 	optimizedPaths = new ArrayList<Path>();
@@ -397,7 +419,9 @@ void optimize()
 	  removeShort(1);
 	  println("number of opt points "+totalPoints(optimizedPaths));
 
-
+          totalPathLength();
+          
+ 
 }
 
 void removeShort(float len)
@@ -437,9 +461,46 @@ void mergePaths(float len)
 	}
 }
 
-
-
 Path nearestPath(float x, float y)
+{
+  boolean reverse = false;
+  float min = Float.MAX_VALUE;
+  int index = 0;
+  for(int i = 0; i<remainingPaths.size(); i++)     
+  {
+    Path path = remainingPaths.get(i);
+    RPoint first = path.first();
+    float sx = first.x;
+    float sy = first.y;
+
+    float ds = dist(x,y,sx,sy);
+    
+    RPoint last = path.last();
+    sx = last.x;
+    sy = last.y;
+
+    float de =  dist(x,y,sx,sy);
+    float d = ds+de;
+    if(d < min)
+    {
+      if(de < ds)
+        reverse = true;
+      else
+        reverse = false;
+       min = d;
+      index = i;
+    }
+    
+  }
+
+  Path p = remainingPaths.remove(index);
+  if(reverse)
+    p.reverse();
+  return p;
+}
+
+
+Path oldnearestPath(float x, float y)
 {
 	boolean reverse = false;
 	float min = Float.MAX_VALUE;

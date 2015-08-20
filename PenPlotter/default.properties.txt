@@ -1,5 +1,5 @@
 #Polar Properties
-#Wed Aug 19 20:02:38 CDT 2015
+#Thu Aug 20 11:29:10 CDT 2015
 cnc.safeHeight=5
 com.baudrate=115200
 com.serialPort=1
@@ -20,5 +20,5 @@ machine.penSize=0.5
 machine.width=840
 machine.zoomScale=0.7289999
 svg.UserScale=1.0
-svg.name=C\:\\Users\\Rick\\Documents\\GitHub\\PenPlotter\\PenPlotter\\data\\rect.svg
+svg.name=/Users/rick/GitHub/PolarGraph/PenPlotter/data/plane.svg
 svg.pixelsPerInch=72.0

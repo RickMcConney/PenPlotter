@@ -288,31 +288,40 @@ void load(ControlEvent theEvent)
 
 void plot(ControlEvent theEvent)
 {
-    Button b = (Button) theEvent.getController();  
-  /*
-  if (plotting)
-  {
-    plotLine();
-  } else if (plottingImage)
-    plotNextDiamondPixel();
+    Button b = (Button) theEvent.getController(); 
+    if (b.getCaptionLabel().getText().indexOf("Step") >= 0)
+   {
+      if (plotting)
+      {
+        int index = iindex;
+        while(index == iindex)
+          plotLine();
+        
+      } 
+      else if (plottingImage)
+        plotNextDiamondPixel();
 
-  else if (plottingGcode)
-    nextGcode();
-    */
-  if (b.getCaptionLabel().getText().indexOf("Abort") >= 0)
-  {
-     b.setCaptionLabel("Plot");
-    ((MyButton)b).setImg(plotImg);
-  // oksend("M112\n");
-   resetSvg();
-   resetImage();
-   resetGcode();
-   
-  }
-  else
-  {  
-     b.setCaptionLabel("Abort");
-    ((MyButton)b).setImg(pauseImg);
+      else if (plottingGcode)
+        nextGcode();
+   }
+   else if (b.getCaptionLabel().getText().indexOf("Abort") >= 0)
+    {
+       b.setCaptionLabel("Plot");
+      ((MyButton)b).setImg(plotImg);
+    // oksend("M112\n");
+     resetSvg();
+     resetImage();
+     resetGcode();   
+    }
+    else
+    {  
+       if(myPort == null) 
+           b.setCaptionLabel("Step");
+       else
+       {
+          b.setCaptionLabel("Abort");
+          ((MyButton)b).setImg(pauseImg);
+       }
   
     if (sh != null)
       plotSvg();
