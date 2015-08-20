@@ -18,8 +18,13 @@ boolean plottingGcode = false;
 void clearGcode()
 {
   gcodeData = null;
-  plottingGcode = false;  
   gcodePaths = null;
+  resetGcode();
+}
+
+void resetGcode()
+{
+    plottingGcode = false;  
 }
 
 void loadGcode(String fileName)

@@ -14,6 +14,8 @@ PImage penUpImg;
 PImage penDownImg; 
 PImage loadImg; 
 PImage clearImg;
+PImage pauseImg;
+PImage plotImg;
 
 class MyButton extends Button {
   public PImage img;
@@ -115,7 +117,9 @@ void createcp5GUI()
   penDownImg= loadImage("icons/penDown.png"); 
   loadImg= loadImage("icons/load.png"); 
   clearImg= loadImage("icons/clear.png");
-
+  pauseImg = loadImage("icons/pause.png");
+  plotImg = loadImage("icons/plot.png");
+  
   connectDropList = cp5.addDropdownList("dropListConnect")
     .setPosition(leftMargin, posY)
       .setCaptionLabel("Connect")
@@ -282,8 +286,10 @@ void load(ControlEvent theEvent)
   }
 }
 
-void plot()
+void plot(ControlEvent theEvent)
 {
+    Button b = (Button) theEvent.getController();  
+  /*
   if (plotting)
   {
     plotLine();
@@ -292,8 +298,22 @@ void plot()
 
   else if (plottingGcode)
     nextGcode();
+    */
+  if (b.getCaptionLabel().getText().indexOf("Abort") >= 0)
+  {
+     b.setCaptionLabel("Plot");
+    ((MyButton)b).setImg(plotImg);
+  // oksend("M112\n");
+   resetSvg();
+   resetImage();
+   resetGcode();
+   
+  }
   else
   {  
+     b.setCaptionLabel("Abort");
+    ((MyButton)b).setImg(pauseImg);
+  
     if (sh != null)
       plotSvg();
     else if (gcodeData != null)

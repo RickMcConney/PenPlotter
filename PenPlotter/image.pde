@@ -40,7 +40,12 @@ void setPenWidth(float width)
 void clearImage()
 {
   oimg = null;
-  plottingImage = false;
+  resetSvg();
+}
+
+void resetImage()
+{
+    plottingImage = false;
 }
 
 void rotateImg()

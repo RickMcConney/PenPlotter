@@ -21,11 +21,17 @@ void setSvgUserScale(float value)
 void clearSvg()
 {
 	sh = null;
-	plotting = false;
-	iindex = -1;
-	jindex = -1;
-	clearQueue();
         optimizedPaths = null;
+        resetSvg();
+
+}
+
+void resetSvg()
+{
+  plotting = false;
+  iindex = -1;
+  jindex = -1;
+  clearQueue();
 }
 
 void drawPlottedLine()
