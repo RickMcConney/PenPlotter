@@ -21,52 +21,64 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 final static String ICON  = "icons/penDown.png";
-final static String TITLE = "PenPlotter v0.2";
+final static String TITLE = "PenPlotter v0.3";
 
 ControlP5 cp5;
 Handle[] handles;
-float cncSafeHeight = 5;
-float currentX = 420;
-float currentY = 250;
-int stickX;
-int stickY;
-
-int machineWidth = 840;
-int homeX = machineWidth/2;
-int machineHeight = 800;
-int homeY = 250;
-
-int speedValue = 500;
-
-float stepsPerRev = 1600;
-float mmPerRev = 20;
-
-float zoomScale = 0.75;
+float cncSafeHeight = 5;  // safe height for cnc export
+float flipX = 1;          // mirror around X if set to -1
+float flipY = 1;          // mirror around Y if set to -1
+float scaleX = 1;         // combined scale svgScale*userScale*flipX
+float scaleY = 1;         // combined scale svgScale*userScale*flipY
+float userScale = 1;      // user controlled scale from slider
 
 
-int menuWidth = 100;
-int originX = (machineWidth+menuWidth)/2;
-int originY = 200;
-int oldOriginX;
+int jogX;                 // set if jog X button pressed
+int jogY;                 // set if jog Y button pressed
+
+int machineWidth = 840;   // Width of machine in mm
+int homeX = machineWidth/2; //X Home position 
+int machineHeight = 800;    //machine Height only used to draw page height
+int homeY = 250;          // location of homeY good location is where gondola hangs with motor power off
+
+float currentX = homeX;   // X location of gondola 
+float currentY = homeY;   // X location of gondola 
+
+int speedValue = 500;     // speed of motors controlled with speed slider
+
+float stepsPerRev = 1600; // number of steps per rev includes microsteps
+float mmPerRev = 80;      // mm per rev
+
+float zoomScale = 0.75;   // screen scale controlle with mouse wheel
+
+
+int menuWidth = 110;
+int originX = (machineWidth+menuWidth)/2; // screen X offset of page will change if page dragged
+int originY = 200;                        // screen Y offset of page will change if page dragged
+
+int oldOriginX;          // old location page when drag starts
 int oldOriginY;
-int oldOffX;
+int oldOffX;             // old offset when right drag starts
 int oldOffY;
 
-int offX = 0;
+int offX = 0;            // offset of drawing from origin 
 int offY = 0;
-int startX;
+
+int startX;              // start location of mouse drag
 int startY;
 
-int imageX = 120;
+int imageX = 120;        // location to draw image overlay
 int imageY = 20;
-;
-int imageWidth = 200;
+
+int imageWidth = 200;   // size of image overlay
 int imageHeight = 200;
 
-int cropLeft = imageX;
+int cropLeft = imageX;    
 int cropTop = imageY;
 int cropRight = imageX+imageWidth;
 int cropBottom = imageY+imageHeight;
+
+String currentFileName = "";
 
 boolean overLeft = false;
 boolean overRight = false;
@@ -82,7 +94,7 @@ color selectColor = color(0, 255, 0);
 color textColor = color(0, 0, 255);
 color motorOnColor = color(255, 0, 0);
 color motorOffColor = color(0, 0, 255);
-int dirty = 0;
+
 
 private void prepareExitHandler () {
 
@@ -98,7 +110,7 @@ private void prepareExitHandler () {
 void exit()
 {
   println("exit");
-  send("M84\n");
+  sendMotorOff();
   delay(1000);
   super.exit();
 }
@@ -140,12 +152,15 @@ void setup() {
   homeY = Integer.parseInt(props.getProperty("machine.homepoint.y"));
   mmPerRev = Float.parseFloat(props.getProperty("machine.motors.mmPerRev"));
   stepsPerRev = Float.parseFloat(props.getProperty("machine.motors.stepsPerRev"));
+  
+  currentX = homeX;
+  currentY = homeY;
 
   penWidth = Float.parseFloat(props.getProperty("machine.penSize"));
 
   svgDpi = Float.parseFloat(props.getProperty("svg.pixelsPerInch"));
   svgScale = 25.4f/svgDpi;
-  svgName = props.getProperty("svg.name");
+  currentFileName = props.getProperty("svg.name");
   cncSafeHeight = Float.parseFloat(props.getProperty("cnc.safeHeight"));
 
 
@@ -174,12 +189,6 @@ void setup() {
   //  RG.setPolygonizerAngle(80*PI/180);
 
   createcp5GUI();
-  // createGUI();
-  /*
-  connectList.setItems(comPorts, 0);
-   pixelSlide.setValue(pixelSize);
-   speedSlide.setValue(speedValue);
-   */
 
   speedValue = Integer.parseInt(props.getProperty("machine.motors.maxSpeed"));
   speedSlider.setValue(speedValue);
@@ -187,9 +196,10 @@ void setup() {
   pixelSize = Integer.parseInt(props.getProperty("image.pixelSize"));
   pixelSizeSlider.setValue(pixelSize);
 
-  svgUserScale = Float.parseFloat(props.getProperty("svg.UserScale"));
-  scaleSlider.setValue(svgUserScale);
+  userScale = Float.parseFloat(props.getProperty("svg.UserScale"));
+  scaleSlider.setValue(userScale);
 
+  updateScale();
 
   handles = new Handle[4];
   handles[0] = new Handle("homeY", 0, homeY, 0, 10, handles, false, true, 128);
@@ -218,7 +228,8 @@ void mouseReleased() {
     {
       if (handles[i].id.equals("gondola"))
       {
-        send("G0 X"+currentX+" Y"+currentY+"\n");
+        
+        sendMoveG0(currentX,currentY);
       }
       if (handles[i].id.equals("homeY"))
       {
@@ -377,10 +388,35 @@ void mouseWheel(MouseEvent event) {
     setZoom(zoomScale*0.9);
 }
 
+void keyPressed() {
+  if (key == 'x') {
+    flipX *= -1;
+    updateScale();
+  } else if (key == 'y') {
+    flipY *= -1;
+    updateScale();
+  }
+}
+
 void setSpeed(int value)
 {
   speedValue = value;
-  send("G0 F"+speedValue+"\n");
+  sendSpeed(speedValue);
+
+}
+
+void setuserScale(float value)
+{
+  userScale = value;
+  updateScale();
+  setImageScale();
+}
+
+void updateScale()
+{
+  scaleX = svgScale*userScale*flipX;
+  scaleY = svgScale*userScale*flipY;
+  
 }
 float unScaleX(float x)
 {
@@ -424,11 +460,7 @@ void setZoom(float value)
 
 void draw() {
 
-  // dirty++;
-  // if(dirty >=4)
-  //   dirty = 0;
-  if (dirty == 0)
-  {
+
     background(backgroundColor);
 
     drawPage();
@@ -462,21 +494,19 @@ void draw() {
       drawPath();
     }
 
-
-
-
     // drawMenu();
-  }
 
-  if (stickX != 0)
+
+  if (jogX != 0)
   {
-    send("G0 X"+stickX+"\n");
-    updatePos(currentX += stickX, currentY);
+
+    moveDeltaX(jogX);
+    updatePos(currentX += jogX, currentY);
   }
-  if (stickY != 0)
+  if (jogY != 0)
   {
-    send("G0 Y"+stickY+"\n");
-    updatePos(currentX, currentY += stickY);
+    moveDeltaY(jogY);
+    updatePos(currentX, currentY += jogY);
   }
 }
 
@@ -588,7 +618,7 @@ void drawOrigin()
   stroke(gridColor);
   strokeWeight(0.1);
   line(scaleX(0), scaleY(homeY), scaleX(machineWidth), scaleY(homeY));
-  line(scaleX(homeX), scaleY(0), scaleX(homeX), scaleY(machineHeight));
+  line(scaleX(homeX), scaleY(0), scaleX(homeX), scaleY(machineHeight)); 
 }
 
 void drawTicks()

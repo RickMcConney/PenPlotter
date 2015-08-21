@@ -17,11 +17,10 @@ void saveProperties() {
 
 			props.setProperty("machine.penSize",""+penWidth );
 			props.setProperty("svg.pixelsPerInch",""+svgDpi);
-			props.setProperty("svg.name",svgName);
-			props.setProperty("svg.UserScale",""+svgUserScale);
+			props.setProperty("svg.name",currentFileName);
+			props.setProperty("svg.UserScale",""+userScale);
 
 			props.setProperty("image.pixelSize",""+pixelSize);
-			props.setProperty("image.scale",""+imageScale);
 			
 			props.setProperty("com.baudrate",""+baudRate);
 			props.setProperty("com.serialPort",""+lastPort);
@@ -105,5 +104,66 @@ class SortedProperties extends Properties {
 		return keyList.elements();
 	}
 
+}
+
+void loadVectorFile()
+{
+
+  SwingUtilities.invokeLater(new Runnable() 
+  {
+    public void run() {
+      JFileChooser fc = new JFileChooser();
+      fc.setFileFilter(new VectorFileFilter());
+      if (currentFileName != null)
+        fc.setSelectedFile(new File(currentFileName));
+      fc.setDialogTitle("Choose a vector file...");
+
+      int returned = fc.showOpenDialog(frame);
+      if (returned == JFileChooser.APPROVE_OPTION) 
+      {
+        File file = fc.getSelectedFile();
+        if (file.getPath().endsWith(".svg"))
+          sh = loadShapeFromFile(file.getPath());
+        else if (gcodeFile(file.getPath()))
+          loadGcode(file.getPath());
+        else if (imageFile(file.getPath()))
+          loadImageFile(file.getPath());
+        currentFileName = file.getPath();
+      }
+    }
+  }
+  );
+}
+
+boolean gcodeFile(String filename)
+{
+  if (filename.endsWith(".gco") || filename.endsWith(".g") ||
+    filename.endsWith(".nc") || filename.endsWith(".cnc") ||
+    filename.endsWith(".gcode"))
+    return true;
+  return false;
+}
+boolean imageFile(String filename)
+{
+  if (filename.endsWith(".png") || filename.endsWith(".jpg") ||
+    filename.endsWith(".gif") || filename.endsWith(".tga"))
+    return true;
+  return false;
+}
+class VectorFileFilter extends javax.swing.filechooser.FileFilter 
+{
+  public boolean accept(File file) {
+    String filename = file.getName();
+    filename.toLowerCase();
+    if (file.isDirectory() || filename.endsWith(".svg") || gcodeFile(filename) || imageFile(filename)
+
+    )
+      return true;
+    else
+      return false;
+  }
+  public String getDescription() {
+    return "Plote files (SVG, GCode, Image)";
+  }
 }
 

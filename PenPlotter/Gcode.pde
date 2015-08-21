@@ -330,8 +330,8 @@ void rotateGcode(int rotation)
 
 void drawPath()
 {
-  float lastX = -offX/svgUserScale;
-  float lastY = -offY/svgUserScale;
+  float lastX = -offX/(userScale*flipX);
+  float lastY = -offY/(userScale*flipY);
   RPoint cur;
   for ( int i=0; i<gcodePaths.size (); i++)
   {
@@ -343,13 +343,13 @@ void drawPath()
       else
         stroke(255, 0, 0);
       cur = p.getPoint(j);
-      sline(lastX*svgUserScale+offX+homeX, lastY*svgUserScale+offY+homeY, cur.x*svgUserScale+offX+homeX, cur.y*svgUserScale+offY+homeY);
+      sline(lastX*userScale*flipX+offX+homeX, lastY*userScale*flipY+offY+homeY, cur.x*userScale*flipX+offX+homeX, cur.y*userScale*flipY+offY+homeY);
       lastX = cur.x;
       lastY = cur.y;
     }
   }
   stroke(0, 255, 0);
-  sline(lastX*svgUserScale+offX+homeX, lastY*svgUserScale+offY+homeY, homeX, homeY);
+  sline(lastX*userScale*flipX+offX+homeX, lastY*userScale*flipY+offY+homeY, homeX, homeY);
 }
 
 void plotGcode()
@@ -359,7 +359,7 @@ void plotGcode()
   lastX = 0;
   lastY = 0;
   lastZ = 0;
-  send("G0 F"+speedValue+"\n");
+  sendSpeed(speedValue);
   nextGcode();
 }
 
@@ -383,10 +383,11 @@ void nextGcode()
     {
       plottingGcode = false;
       sendPenUp();
-      send("G0 X"+homeX+" Y"+homeY);
+      sendMoveG0(homeX,homeY);
       currentX = homeX;
       currentY = homeY;
-      send("M84\n");
+      sendMotorOff();
+
 
       return;
     }
@@ -407,17 +408,17 @@ void nextGcode()
       if ("G20".equals(cmd)) conversion = toInch;
       if ("G21".equals(cmd)) conversion = toMm;
       if (token.startsWith("X"))
-        x = Float.parseFloat(token.substring(1))*conversion*svgUserScale;
+        x = Float.parseFloat(token.substring(1))*conversion*userScale*flipX;
       else if (token.startsWith("Y"))
-        y = Float.parseFloat(token.substring(1))*conversion*svgUserScale;
+        y = Float.parseFloat(token.substring(1))*conversion*userScale*flipY;
       else if (token.startsWith("Z"))
-        z = -Float.parseFloat(token.substring(1))*conversion*svgUserScale;
+        z = -Float.parseFloat(token.substring(1))*conversion*userScale;
       else if (token.startsWith("I"))
-        I = Float.parseFloat(token.substring(1))*conversion*svgUserScale;
+        I = Float.parseFloat(token.substring(1))*conversion*userScale*flipX;
       else if (token.startsWith("J"))
-        J = Float.parseFloat(token.substring(1))*conversion*svgUserScale;
+        J = Float.parseFloat(token.substring(1))*conversion*userScale*flipY;
       else if (token.startsWith("R"))
-        R = Double.parseDouble(token.substring(1))*conversion*svgUserScale;
+        R = Double.parseDouble(token.substring(1))*conversion*userScale;
     }
 
     if (cmd.equals(""))
@@ -433,25 +434,25 @@ void nextGcode()
       if (cmd.equals("G0"))
       {
         sendPenUp();
-        send("G0 X"+(x+offX+homeX)+" Y"+(y+offY+homeY)+"\n");
+        sendMoveG0((x+offX+homeX),(y+offY+homeY));
         sendPenDown();
         sent= true;
       } else if (cmd.equals("G1"))
       {
-        send("G1 X"+(x+offX+homeX)+" Y"+(y+offY+homeY)+"\n");
+        sendMoveG1((x+offX+homeX),(y+offY+homeY));
         sent= true;
       } else if (cmd.equals("G2"))
       {
         if (!Float.isNaN(I) && !Float.isNaN(J))
         { 
-          send("G2 X"+(x+offX+homeX)+" Y"+(y+offY+homeY)+" I"+I+" J"+J+"\n");
+          sendG2((x+offX+homeX),(y+offY+homeY),I,J);
           sent= true;
         }
       } else if (cmd.equals("G3"))
       {
         if (!Float.isNaN(I) && !Float.isNaN(J))
         { 
-          send("G3 X"+(x+offX+homeX)+" Y"+(y+offY+homeY)+" I"+I+" J"+J+"\n");
+          sendG3((x+offX+homeX),(y+offY+homeY),I,J);
           sent = true;
         }
       }

@@ -1,9 +1,8 @@
 Serial myPort;  //the Serial port object
 String val;
 ArrayList<String> buf = new ArrayList<String>();
-String[] comPorts = {
-  "one", "two", "three", "four"
-};
+
+ArrayList<String> comPorts = new ArrayList<String>();
 long baudRate = 115200;
 int lastPort;
 int okCount = 0;
@@ -11,17 +10,21 @@ int okCount = 0;
 public void listPorts()
 {
   //  initialize your serial port and set the baud rate to 9600
-  comPorts = new String[Serial.list().length+2];
-  comPorts[0] = "Connect";
-  comPorts[1] = "Disconnect";
-  for (int i = 0; i<Serial.list ().length; i++)
+
+  comPorts.add("Connect");
+  comPorts.add("Disconnect");
+
+  for (int i = 0; i<Serial.list().length; i++)
   {
     String name = Serial.list()[i];
     int dot = name.indexOf('.');
     if (dot >= 0)
       name = name.substring(dot+1);
-    comPorts[i+2] = name;
-    println(name);
+    if(name.indexOf("luetooth") <0) 
+    {
+        comPorts.add(name);
+        println(name);
+    }
   }
 }
 void disconnect()
@@ -48,17 +51,52 @@ void connect(int port)
 
 void connect(String name)
 {
-  for (int i = 0; i<comPorts.length; i++)
+  for (int i = 0; i<Serial.list().length; i++)
   {
-    if (name.equals(comPorts[i]))
+    if (Serial.list()[i].indexOf(name) >=0)
     {
-      if (i < 2)
-        disconnect();
-      else
-        connect(i-2);
-      break;
+      connect(i);
+      return;
     }
   }
+  disconnect();
+}
+void sendMotorOff()
+{
+  send("M84\n");
+}
+void moveDeltaX(float x)
+{
+  send("G0 X"+x+"\n");
+}
+
+void moveDeltaY(float y)
+{
+  send("G0 Y"+y+"\n");
+}
+void sendMoveG0(float x, float y)
+{
+  send("G0 X"+x+" Y"+y+"\n");
+}
+
+void sendMoveG1(float x, float y)
+{
+  send("G1 X"+x+" Y"+y+"\n");
+}
+
+void sendG2(float x, float y,float i, float j)
+{
+  send("G2 X"+x+" Y"+y+" I"+i+" J"+j+"\n");
+}
+
+void sendG3(float x, float y,float i, float j)
+{
+  send("G3 X"+x+" Y"+y+" I"+i+" J"+j+"\n");
+}
+
+void sendSpeed(int speed)
+{
+    send("G0 F"+speed+"\n");
 }
 
 void sendHome()
@@ -94,7 +132,27 @@ void sendPenDown()
   send("M340 P3 S1500\n");
   send("G4 P250\n");
 }
+void sendAbsolute()
+{
+    send("G90\n");
+}
 
+void sendRelative()
+{
+    send("G91\n");
+}
+
+void sendPixel(float da,float db,int pixelSize,int shade,int pixelDir)
+{
+  send("M3 X"+da+" Y"+db+" P"+pixelSize+" S"+shade+" E"+pixelDir+"\n");
+}
+
+void sendSqPixel(float x,float y,int size,int b)
+{
+  //todo 
+   send("M2 X"+x+" Y"+y+" P"+size+" S"+b+"\n");
+}
+    
 void initArduino()
 {
   sendHome();
@@ -123,7 +181,7 @@ public void nextMsg()
     buf.remove(0);
   } else
   {
-    if (plotting)
+    if (plottingSvg)
       plotLine();
     if (plottingImage)
       plotNextDiamondPixel();

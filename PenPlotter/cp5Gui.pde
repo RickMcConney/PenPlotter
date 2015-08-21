@@ -101,7 +101,7 @@ class myView implements ControllerView<Button> {
       if ("".equals(theButton.getCaptionLabel().getText()))
         theApplet.image(img, theButton.getWidth()/2-16, 0, 32, 32);
       else
-        theApplet.image(img, theButton.getWidth()-30, 1, 32, 32);
+        theApplet.image(img, theButton.getWidth()-34, 1, 32, 32);
     }
     theApplet.popMatrix();
   }
@@ -134,7 +134,6 @@ void createcp5GUI()
                         .setItemHeight(20)
                           .setBarHeight(20)
                             .setOpen(false)
-                              .setSize(menuWidth, 10*30)
                                 .addItems(comPorts)
                                   ;
 
@@ -159,9 +158,11 @@ void createcp5GUI()
   addButton("load", "Load", leftMargin, posY+=ySpace);
   addButton("plot", "Plot", leftMargin, posY+=ySpace);
   addButton("dorotate", "Rotate", leftMargin, posY+=ySpace);
+  addButton("mirrorX","Flip X",leftMargin,posY+=ySpace);
+  addButton("mirrorY","Flip Y",leftMargin,posY+=ySpace);
 
   posY += ySpace;
-  scaleSlider = addSlider("scale", "SCALE", 0.1, 5, svgUserScale);
+  scaleSlider = addSlider("scale", "SCALE", 0.1, 5, userScale);
   pixelSizeSlider = addSlider("pixelSlider", "PIXEL SIZE", 2, 16, pixelSize);
 
   penSlider = addSlider("penWidth", "PEN WIDTH", 0.1, 5, 0.5);
@@ -280,7 +281,7 @@ void load(ControlEvent theEvent)
     clearSvg();
     clearGcode();
     clearImage();
-    send("M84\n");
+    sendMotorOff();
     b.setCaptionLabel("Load");
     ((MyButton)b).setImg(loadImg);
   }
@@ -291,10 +292,10 @@ void plot(ControlEvent theEvent)
     Button b = (Button) theEvent.getController(); 
     if (b.getCaptionLabel().getText().indexOf("Step") >= 0)
    {
-      if (plotting)
+      if (plottingSvg)
       {
-        int index = iindex;
-        while(index == iindex)
+        int index = svgPathIndex;
+        while(index == svgPathIndex)
           plotLine();
         
       } 
@@ -344,6 +345,19 @@ void dorotate()
   rotateImg();
 }
 
+void mirrorX()
+{
+  flipX *= -1;
+  updateScale();
+  flipImgX();
+}
+void mirrorY()
+{
+  flipY *= -1;
+  updateScale();
+  flipImgY();
+}
+
 void penUp(ControlEvent theEvent)
 {
   Button b = (Button) theEvent.getController();  
@@ -363,15 +377,16 @@ void penUp(ControlEvent theEvent)
 
 void goHome()
 {
-  send("G90\n");
+  sendAbsolute();
+
   sendPenUp();
-  send("G0 X"+homeX+" Y"+homeY+"\n");
+  sendMoveG0(homeX,homeY);
   updatePos(homeX, homeY);
 }
 
 void off()
 {
-  send("M84\n");
+  sendMotorOff();
 }
 
 void save()
@@ -410,21 +425,20 @@ void pixelSlider(int size)
 
 void scale(float scale)
 {
+  setuserScale(scale);
 
-  setSvgUserScale(scale);
-  setImageScale(scale);
 }
 
 void jog(boolean jog, int x, int y)
 {
   if (jog) {  
-    send("G91\n");
-    stickX = x;
-    stickY = y;
+    sendRelative();
+    jogX = x;
+    jogY = y;
   } else
   {
-    send("G90\n");
-    stickX = 0;
-    stickY = 0;
+    sendAbsolute();
+    jogX = 0;
+    jogY = 0;
   }
 }

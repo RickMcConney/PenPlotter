@@ -5,7 +5,7 @@ int dindex = 0;
 PImage simage;
 PImage oimg;
 boolean plottingImage = false;
-float imageScale = 0.75; 
+
 int pixelSize = 8;
 int skipColor;
 int lastPixel;
@@ -48,6 +48,52 @@ void resetImage()
     plottingImage = false;
 }
 
+void flipImgX()
+{
+  if (oimg == null) return;
+  int cols = oimg.width;
+  int rows = oimg.height;
+
+  oimg.loadPixels();
+  PImage rimage = new PImage(cols, rows);
+  rimage.loadPixels();
+
+  for (int i=0; i<cols; i++) {
+    for (int j=0; j<rows; j++) {
+      int ps = i*cols+(cols-1-j);
+      int pd = i*cols+j;
+      if (pd < rimage.pixels.length && ps < oimg.pixels.length)
+        rimage.pixels[pd] = oimg.pixels[ps];
+    }
+  }
+  rimage.updatePixels();
+  oimg = rimage;
+  cropImage(cropLeft, cropTop, cropRight, cropBottom);
+} 
+
+void flipImgY()
+{
+  if (oimg == null) return;
+  int cols = oimg.width;
+  int rows = oimg.height;
+
+  oimg.loadPixels();
+  PImage rimage = new PImage(cols, rows);
+  rimage.loadPixels();
+
+  for (int i=0; i<cols; i++) {
+    for (int j=0; j<rows; j++) {
+      int ps = cols*(cols-1-i)+j;
+      int pd = i*cols+j;
+      if (pd < rimage.pixels.length && ps < oimg.pixels.length)
+        rimage.pixels[pd] = oimg.pixels[ps];
+    }
+  }
+  rimage.updatePixels();
+  oimg = rimage;
+  cropImage(cropLeft, cropTop, cropRight, cropBottom);
+}
+
 void rotateImg()
 {
   if (oimg == null) return;
@@ -82,16 +128,15 @@ void cropImage(int x1, int y1, int x2, int y2)
     int height = oimg.height;
     int cropWidth = (x2-x1)*width/imageWidth;
     int cropHeight = (y2-y1)*height/imageHeight;
-    simage = new PImage((int)(cropWidth*imageScale), (int)(cropHeight*imageScale));
+    simage = new PImage((int)(cropWidth*userScale), (int)(cropHeight*userScale));
     simage.copy(oimg, (x1-ox)*width/imageWidth, (y1-oy)*height/imageHeight, cropWidth, cropHeight, 0, 0, simage.width, simage.height);
     simage.loadPixels();
     if (simage != null)
       calculateDiamondPixels(simage, pixelSize);
   }
 }
-void setImageScale(float value)
+void setImageScale()
 {
-  imageScale= value;
   cropImage(cropLeft, cropTop, cropRight, cropBottom);
 }
 
@@ -272,9 +317,10 @@ void plotNextDiamondPixel()
       else
         pixelDir = DIR_NE;
       sendPenUp();
-      send("G0 X"+(p.x+offX)+" Y"+(p.y+offY)+" F"+speedValue+"\n");
+      sendMoveG0((p.x+offX),(p.y+offY));
       sendPenDown();
-      send("M3 X"+da+" Y"+db+" P"+pixelSize+" S"+p.z+" E"+pixelDir+"\n");
+      sendPixel(da,db,pixelSize,(int)p.z,pixelDir);
+
     } else
     {
       PVector last = raw.get(dindex-1);
@@ -288,16 +334,15 @@ void plotNextDiamondPixel()
         else
           pixelDir = DIR_NE;
       }
+      sendPixel(da,db,pixelSize,(int)p.z,pixelDir);
 
-      send("M3 X"+da+" Y"+db+" P"+pixelSize+" S"+p.z+" E"+pixelDir+"\n");
-      //println(r.x+" "+r.y);
     }
 
     updatePos(p.x+offX, p.y+offY);
     dindex++;
   } else
   {
-    send("M84\n");
+    sendMotorOff();
     plottingStopped();
   }
 }
@@ -442,13 +487,13 @@ void plotImagePixel(PImage image, int size, int x, int y)
   if (skipColor != (int)b)
   {
     lastPixel = (int)b;
-    send("M2 X"+x+" Y"+y+" P"+size+" S"+(int)b+"\n");
+    sendSqPixel(x,y,size,(int)b);
     fill((int)b);
     rect(scaleX(x), scaleY(y), size*zoomScale, size*zoomScale);
   } else if (lastPixel != skipColor && skipColor == (int)b)
   {
     lastPixel = (int)b;
-    send("M2 X"+x+" Y"+y+" P"+size+" S"+(int)b+"\n");
+    sendSqPixel(x,y,size,(int)b);
     fill((int)b);
     rect(scaleX(x), scaleY(y), size*zoomScale, size*zoomScale);
   } else
