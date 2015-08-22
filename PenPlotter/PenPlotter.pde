@@ -383,9 +383,9 @@ void mouseWheel(MouseEvent event) {
   float e = event.getCount();
 
   if (e > 0)
-    setZoom(zoomScale*1.1);
-  else
-    setZoom(zoomScale*0.9);
+    setZoom(zoomScale+=0.1);
+  else if(zoomScale > 0.1)
+    setZoom(zoomScale-=0.1);
 }
 
 void keyPressed() {
@@ -542,7 +542,7 @@ void drawPage()
   status += " X "+nf(currentX, 0, 2)+" Y "+nf(currentY, 0, 2);
   status += " A "+nf(getMachineA(currentX, currentY), 0, 2);
   status += " B "+nf(getMachineB(currentX, currentY), 0, 2); 
-  text(status, scaleX(machineWidth)-textWidth(status)-30, scaleY(0)+15);
+  text(status, scaleX(homeX-textWidth(status)/2), scaleY(0)+15);
 }
 
 void drawPaper()

@@ -129,6 +129,7 @@ void loadVectorFile()
         else if (imageFile(file.getPath()))
           loadImageFile(file.getPath());
         currentFileName = file.getPath();
+        fileLoaded();
       }
     }
   }

@@ -25,6 +25,7 @@ void clearGcode()
 void resetGcode()
 {
     plottingGcode = false;  
+    plotDone();
 }
 
 void loadGcode(String fileName)
@@ -382,6 +383,7 @@ void nextGcode()
     if (gcodeIndex >= gcodeData.size())
     {
       plottingGcode = false;
+      plotDone();
       sendPenUp();
       sendMoveG0(homeX,homeY);
       currentX = homeX;

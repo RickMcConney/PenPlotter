@@ -2,7 +2,7 @@ DropdownList connectDropList;
 Textlabel myTextarea;
 int leftMargin = 10;
 int posY = 10;
-int ySpace = 40;
+int ySpace = 36;
 int rotation = 0;
 
 //Println console;
@@ -16,6 +16,8 @@ PImage loadImg;
 PImage clearImg;
 PImage pauseImg;
 PImage plotImg;
+MyButton loadButton;
+MyButton plotButton;
 
 class MyButton extends Button {
   public PImage img;
@@ -35,7 +37,7 @@ MyButton addButton(String name, String label, int x, int y)
   PImage img = loadImage("icons/"+name+".png"); 
   MyButton b = new MyButton(cp5, name);
   b.setPosition(x, y)
-    .setSize(menuWidth, 34)
+    .setSize(menuWidth, 30)
       .setCaptionLabel(label)
         .setView(new myView())
           ;
@@ -99,9 +101,9 @@ class myView implements ControllerView<Button> {
     if (img != null)
     {
       if ("".equals(theButton.getCaptionLabel().getText()))
-        theApplet.image(img, theButton.getWidth()/2-16, 0, 32, 32);
+        theApplet.image(img, theButton.getWidth()/2-16, -3, 32, 32);
       else
-        theApplet.image(img, theButton.getWidth()-34, 1, 32, 32);
+        theApplet.image(img, theButton.getWidth()-34, 0, 32, 32);
     }
     theApplet.popMatrix();
   }
@@ -133,13 +135,14 @@ void createcp5GUI()
                       .setColorValue(color(0))
                         .setItemHeight(20)
                           .setBarHeight(20)
+                          .setWidth(menuWidth)
                             .setOpen(false)
                                 .addItems(comPorts)
                                   ;
 
 
   myTextarea = cp5.addTextlabel("txt")
-    .setPosition(leftMargin, posY+=30)
+    .setPosition(leftMargin, posY+=20)
       .setSize(menuWidth, 30)
         .setFont(createFont("", 10))
           .setLineHeight(14)
@@ -148,15 +151,15 @@ void createcp5GUI()
                 .setColorForeground(textColor)
                   ;
 
-  addButton("setHome", "Set Home", leftMargin, posY+=ySpace);
-  addButton("up", "", leftMargin+30, posY+=ySpace).onPress(press).onRelease(release).setSize(40, 30);
-  addButton("left", "", leftMargin+10, posY+=30).onPress(press).onRelease(release).setSize(40, 30);
-  addButton("right", "", leftMargin+50, posY).onPress(press).onRelease(release).setSize(40, 30);
+  addButton("setHome", "Set Home", leftMargin, posY+=ySpace/2);
+  addButton("up", "", leftMargin+36, posY+=ySpace+4).onPress(press).onRelease(release).setSize(30, 24);
+  addButton("left", "", leftMargin+16, posY+=30).onPress(press).onRelease(release).setSize(30, 24);
+  addButton("right", "", leftMargin+56, posY).onPress(press).onRelease(release).setSize(30, 24);
 
-  addButton("down", "", leftMargin+30, posY+=30).onPress(press).onRelease(release).setSize(40, 30);
+  addButton("down", "", leftMargin+36, posY+=30).onPress(press).onRelease(release).setSize(30, 24);
 
-  addButton("load", "Load", leftMargin, posY+=ySpace);
-  addButton("plot", "Plot", leftMargin, posY+=ySpace);
+  loadButton = addButton("load", "Load", leftMargin, posY+=ySpace);
+  plotButton = addButton("plot", "Plot", leftMargin, posY+=ySpace);
   addButton("dorotate", "Rotate", leftMargin, posY+=ySpace);
   addButton("mirrorX","Flip X",leftMargin,posY+=ySpace);
   addButton("mirrorY","Flip Y",leftMargin,posY+=ySpace);
@@ -267,21 +270,30 @@ void setHome()
   updatePos(homeX, homeY);
 }
 
+void plotDone()
+{
+    plotButton.setCaptionLabel("Plot");
+    plotButton.setImg(plotImg);
+}
+
+void fileLoaded()
+{
+    loadButton.setCaptionLabel("Clear");
+    loadButton.setImg(clearImg);
+}
 void load(ControlEvent theEvent)
 {
   Button b = (Button) theEvent.getController();  
 
   if (b.getCaptionLabel().getText().startsWith("Load"))
   {
-    b.setCaptionLabel("Clear");
-    ((MyButton)b).setImg(clearImg);
+
     loadVectorFile();
   } else
   {
     clearSvg();
     clearGcode();
     clearImage();
-    sendMotorOff();
     b.setCaptionLabel("Load");
     ((MyButton)b).setImg(loadImg);
   }
@@ -290,7 +302,7 @@ void load(ControlEvent theEvent)
 void plot(ControlEvent theEvent)
 {
     Button b = (Button) theEvent.getController(); 
-    if (b.getCaptionLabel().getText().indexOf("Step") >= 0)
+   if (b.getCaptionLabel().getText().indexOf("Step") >= 0)
    {
       if (plottingSvg)
       {
@@ -304,6 +316,11 @@ void plot(ControlEvent theEvent)
 
       else if (plottingGcode)
         nextGcode();
+      else
+      {
+        b.setCaptionLabel("Plot");
+        ((MyButton)b).setImg(plotImg);
+      }
    }
    else if (b.getCaptionLabel().getText().indexOf("Abort") >= 0)
     {
@@ -316,6 +333,16 @@ void plot(ControlEvent theEvent)
     }
     else
     {  
+ 
+    if (sh != null)
+      plotSvg();
+    else if (gcodeData != null)
+      plotGcode();
+    else if (oimg != null)
+      plotDiamondImage();
+      
+    if(plottingSvg || plottingImage || plottingGcode)
+    {
        if(myPort == null) 
            b.setCaptionLabel("Step");
        else
@@ -323,13 +350,7 @@ void plot(ControlEvent theEvent)
           b.setCaptionLabel("Abort");
           ((MyButton)b).setImg(pauseImg);
        }
-  
-    if (sh != null)
-      plotSvg();
-    else if (gcodeData != null)
-      plotGcode();
-    else if (oimg != null)
-      plotDiamondImage();
+    }
   }
 }
 
@@ -396,7 +417,8 @@ void save()
 
 void export()
 {
-  exportGcode();
+  if(sh != null)
+    exportGcode();
 }
 
 void speedChanged(int speed)

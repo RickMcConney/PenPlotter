@@ -18,6 +18,7 @@ void clearSvg()
 void resetSvg()
 {
   plottingSvg = false;
+  plotDone();
   svgPathIndex = -1;
   svgLineIndex = -1;
   clearQueue();
@@ -67,6 +68,7 @@ void plotLine()
   if (svgPathIndex < 0)
   {
     plottingSvg = false;
+    plotDone();
     return;
   }
 
@@ -104,6 +106,7 @@ void plotLine()
   } else // finished
   {
     plottingSvg = false;
+    plotDone();
     float x1 = homeX;
     float y1 = homeY;
     updatePos(x1, y1);

@@ -40,12 +40,16 @@ void setPenWidth(float width)
 void clearImage()
 {
   oimg = null;
-  resetSvg();
+  resetImage();
 }
 
 void resetImage()
 {
     plottingImage = false;
+    xindex = 0;
+    yindex = 0;
+    dindex = 0;
+    plotDone();
 }
 
 void flipImgX()
@@ -474,6 +478,7 @@ void plotImagePixel(PImage image, int size, int x, int y)
   if (yindex >=height/size)
   {
     plottingImage = false;
+    plotDone();
     return;
   }
 
@@ -570,6 +575,7 @@ void plottingStarted()
 void plottingStopped()
 {
   plottingImage = false;
+  plotDone();
   alpha = 255;
 }
 
