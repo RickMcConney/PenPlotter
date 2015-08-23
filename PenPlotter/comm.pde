@@ -185,6 +185,8 @@ public void nextMsg()
       plotLine();
     if (plottingImage)
       plotNextDiamondPixel();
+    if (plottingHatch)
+      plotNextHatch();
     if (plottingGcode)
       nextGcode();
   }

@@ -1,10 +1,12 @@
 ArrayList<PVector> pixels = new ArrayList<PVector>();
 ArrayList<PVector> raw = new ArrayList<PVector>();
+ArrayList<Path> hatchPaths;
 int dindex = 0;
 
 PImage simage;
 PImage oimg;
 boolean plottingImage = false;
+boolean plottingHatch = false;
 
 int pixelSize = 8;
 int skipColor;
@@ -21,6 +23,9 @@ int pixelDir = DIR_NE;
 
 int xindex = 0;
 int yindex = 0;
+int HATCH = 0;
+int PIXEL = 1;
+int imageMode = HATCH;
 
 void setPenWidth(float width)
 {
@@ -34,7 +39,7 @@ void setPenWidth(float width)
     if (levels > 255) levels = 255;
     range = 255/levels;
     if (simage != null)
-      calculateDiamondPixels(simage, pixelSize);
+      calculateImage();
   }
 }
 void clearImage()
@@ -46,6 +51,7 @@ void clearImage()
 void resetImage()
 {
     plottingImage = false;
+    plottingHatch = false;
     xindex = 0;
     yindex = 0;
     dindex = 0;
@@ -136,7 +142,7 @@ void cropImage(int x1, int y1, int x2, int y2)
     simage.copy(oimg, (x1-ox)*width/imageWidth, (y1-oy)*height/imageHeight, cropWidth, cropHeight, 0, 0, simage.width, simage.height);
     simage.loadPixels();
     if (simage != null)
-      calculateDiamondPixels(simage, pixelSize);
+      calculateImage();
   }
 }
 void setImageScale()
@@ -156,11 +162,19 @@ void setPixelSize(int value)
     if (levels > 255) levels = 255;
     range = 255/levels;
     if (simage != null)
-      calculateDiamondPixels(simage, pixelSize);
+    {
+      calculateImage();
+    }
   }
 }
 
-
+void calculateImage()
+{
+  if(imageMode == PIXEL)
+    calculateDiamondPixels(simage, pixelSize);
+  else if(imageMode == HATCH)
+    hatch(simage);
+}
 
 
 void loadImageFile(String fileName)
@@ -382,6 +396,204 @@ void drawDiamondPixels()
   {
     drawDiamonPixel(i, alpha);
   }
+}
+
+void plotHatch()
+{
+  dindex = 0;
+  plottingHatch = true;
+  plotNextHatch();
+  alpha = 64;
+}
+
+void plotNextHatch()
+{
+  if(dindex <hatchPaths.size())
+  {
+    Path  p = hatchPaths.get(dindex);
+    sendPenUp();
+    sendMoveG0(p.first().x*userScale+homeX+offX,p.first().y*userScale+homeY+offY);
+    sendPenDown();
+    sendMoveG1(p.last().x*userScale+homeX+offX,p.last().y*userScale+homeY+offY);
+    updatePos(p.last().x*userScale+homeX+offX, p.last().y*userScale+homeY+offY);
+    dindex++;
+  }
+  else
+  {
+    plotDone();
+    alpha = 255;
+    plottingHatch = false;
+  }
+}
+  
+void drawPlottedHatch()
+{
+    if(hatchPaths == null) return;
+  Path p;
+  stroke(color(0, 0, 0, 255));
+  for(int i =0;i<dindex;i++)
+  {
+    if(dindex < hatchPaths.size())
+    {
+      p = hatchPaths.get(i);
+      sline(p.first().x*userScale+homeX+offX,p.first().y*userScale+homeY+offY,p.last().x*userScale+homeX+offX,p.last().y*userScale+homeY+offY);
+    }
+  }
+}
+void drawHatch()
+{
+  if(hatchPaths == null) return;
+  Path p;
+  stroke(color(0, 0, 0, alpha));
+  for(int i =0;i<hatchPaths.size();i++)
+  {
+    p = hatchPaths.get(i);
+
+    sline(p.first().x*userScale+homeX+offX,p.first().y*userScale+homeY+offY,p.last().x*userScale+homeX+offX,p.last().y*userScale+homeY+offY);
+  }
+}
+
+
+
+boolean addPaths(ArrayList<Path> paths,boolean reverse)
+{
+  if(paths.size() > 0)
+  {
+      if(reverse)
+      {
+          for(int i = paths.size()-1;i>=0;i--)
+          {
+            paths.get(i).reverse();
+            hatchPaths.add(paths.get(i));
+          }
+      }
+      else
+      {
+          for(int i = 0;i<paths.size();i++)
+            hatchPaths.add(paths.get(i));
+      }
+      return !reverse;
+  }
+  return reverse;
+}
+
+ArrayList<Path> findPaths(PImage image,int start,int len,int step,int threshold)
+{
+  boolean up = true;
+  color c;
+  int x;
+  int y;
+  Path path = null;
+  ArrayList<Path> paths = new ArrayList<Path>(); 
+  int p = start;
+  for(int i = 0;i<len;i++)
+  {
+    if(p >= image.pixels.length) return paths;
+     c = image.pixels[p];
+     if(up && brightness(c) < threshold)
+     {
+         path = new Path();
+         x = p%image.width;
+         y = p/image.width;
+         path.addPoint(x,y);
+         up = false;
+     }
+     else if(!up && brightness(c) > threshold)
+     {
+         x = p%image.width;
+         y = p/image.width;
+         path.addPoint(x,y);
+         paths.add(path);          
+         up = true;           
+     } 
+     p+=step;  
+        
+  }
+  return paths;
+}
+
+public void  hatch(PImage image)
+{
+  int size = pixelSize;
+  hatchPaths = new  ArrayList<Path>();
+  ArrayList<Path> paths = new  ArrayList<Path>();
+  Path path=null;
+  int threshold;
+
+  threshold = (int)t1Slider.getValue(); 
+  //diag down right
+  
+  boolean reverse = false;
+
+  for(int x = image.width-1;x>=0;x-=size)
+  {      
+     paths = findPaths(image,x,image.width-1-x,image.width+1,threshold);      
+     reverse = addPaths(paths,reverse);
+
+  }
+  
+
+  for(int y = 0; y < image.height;y+=size)
+  {
+
+     if(image.height <= image.width)
+       paths = findPaths(image,y*image.width,image.height-1-y,image.width+1,threshold);
+     else
+     {
+       if(y >= image.width)
+          paths = findPaths(image,y*image.width,image.height-1-y,image.width+1,threshold);
+       else
+         paths = findPaths(image,y*image.width,image.width,image.width+1,threshold);
+     }
+     reverse = addPaths(paths,reverse);    
+  }
+  
+  
+  // diag down left
+  threshold = (int)t2Slider.getValue(); 
+
+  for(int x = 0;x<image.width;x+=size)
+  {      
+     paths = findPaths(image,x,x,image.width-1,threshold);      
+     reverse = addPaths(paths,reverse);
+
+  }
+  
+
+  for(int y = 1; y < image.height;y+=size)
+  {
+    
+     if(image.height <= image.width)
+       paths = findPaths(image,y*image.width-1,image.height-1-y,image.width-1,threshold);
+     else
+     {
+      if(y >= image.width)
+          paths = findPaths(image,y*image.width-1,image.height-1-y,image.width-1,threshold);
+       else
+         paths = findPaths(image,y*image.width-1,image.width,image.width-1,threshold);
+     }
+     reverse = addPaths(paths,reverse); 
+     
+  }
+
+  // vertical
+  threshold = (int)t3Slider.getValue();
+
+  for(int x = 0;x<image.width;x+=size)
+  {
+     paths = findPaths(image,x,image.height,image.width,threshold);      
+     reverse = addPaths(paths,reverse);
+  }
+  
+  // horizontal
+  threshold = (int)t4Slider.getValue();
+
+  for(int y = 0;y<image.height;y+=size)
+  {
+     paths = findPaths(image,y*image.width,image.width,1,threshold);      
+     reverse = addPaths(paths,reverse); 
+  }
+
 }
 
 void calculateDiamondPixels(PImage image, int size)
