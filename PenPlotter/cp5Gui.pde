@@ -1,4 +1,5 @@
 DropdownList connectDropList;
+DropdownList filterDropList;
 Textlabel myTextarea;
 int leftMargin = 10;
 int posY = 10;
@@ -10,6 +11,12 @@ Slider pixelSizeSlider;
 Slider speedSlider;
 Slider scaleSlider;
 Slider penSlider;
+
+Slider t1Slider;
+Slider t2Slider;
+Slider t3Slider;
+Slider t4Slider;
+
 PImage penUpImg; 
 PImage penDownImg; 
 PImage loadImg; 
@@ -18,7 +25,7 @@ PImage pauseImg;
 PImage plotImg;
 MyButton loadButton;
 MyButton plotButton;
-
+String[] filters = {"Hatch","Pixel"};
 class MyButton extends Button {
   public PImage img;
 
@@ -47,11 +54,11 @@ MyButton addButton(String name, String label, int x, int y)
   return b;
 }
 
-Slider addSlider(String name, String label, float min, float max, float value)
+Slider addSlider(int x, int y, String name, String label, float min, float max, float value)
 {
   Slider s = cp5.addSlider(name)                       
     .setCaptionLabel(label)
-      .setPosition(leftMargin, posY+=ySpace/2)
+      .setPosition(x, y)
         .setSize(menuWidth, 17)
           .setRange(min, max) 
             .setColorBackground(color(115, 117, 216))
@@ -139,7 +146,24 @@ void createcp5GUI()
                             .setOpen(false)
                                 .addItems(comPorts)
                                   ;
-
+                                  
+ filterDropList = cp5.addDropdownList("filterDropList")
+    .setPosition(imageX+20, imageY+imageHeight+20)
+      .setCaptionLabel("Filter")
+        .onEnter(toFront)
+          .onLeave(close)
+            .setBackgroundColor(color(115, 117, 216))
+              .setColorBackground(color(115, 117, 216))
+                .setColorForeground(color(201, 206, 255))
+                  .setColorActive(color(201, 206, 255))
+                    .setColorCaptionLabel(color(0))
+                      .setColorValue(color(0))
+                        .setItemHeight(20)
+                          .setBarHeight(20)
+                          .setWidth(menuWidth)
+                            .setOpen(false)
+                                .addItems(filters)
+                                  ;
 
   myTextarea = cp5.addTextlabel("txt")
     .setPosition(leftMargin, posY+=20)
@@ -164,16 +188,23 @@ void createcp5GUI()
   addButton("mirrorX","Flip X",leftMargin,posY+=ySpace);
   addButton("mirrorY","Flip Y",leftMargin,posY+=ySpace);
 
-  posY += ySpace;
-  scaleSlider = addSlider("scale", "SCALE", 0.1, 5, userScale);
-  pixelSizeSlider = addSlider("pixelSlider", "PIXEL SIZE", 2, 16, pixelSize);
-
-  penSlider = addSlider("penWidth", "PEN WIDTH", 0.1, 5, 0.5);
-  penSlider.onRelease(penrelease)
-    .onReleaseOutside(penrelease);        
-  speedSlider = addSlider("speedChanged", "SPEED", 100, 2000, 500);
+  
+  scaleSlider = addSlider(leftMargin,posY += ySpace+10,"scale", "SCALE", 0.1, 5, userScale);
+       
+  speedSlider = addSlider(leftMargin,posY += ySpace/2,"speedChanged", "SPEED", 100, 2000, 500);
   speedSlider.onRelease(speedrelease)
-    .onReleaseOutside(speedrelease);       
+    .onReleaseOutside(speedrelease); 
+    
+  pixelSizeSlider = addSlider(imageX+20,imageY+imageHeight+60,"pixelSlider", "PIXEL SIZE", 2, 16, pixelSize);
+
+  penSlider = addSlider(imageX+20,imageY+imageHeight+60+1*ySpace/2,"penWidth", "PEN WIDTH", 0.1, 5, 0.5);
+  penSlider.onRelease(penrelease)
+    .onReleaseOutside(penrelease);       
+  t1Slider = addSlider(imageX+20,imageY+imageHeight+60+1*ySpace/2,"t1", "T1 \\", 0, 255, 192).onRelease(thresholdrelease).onReleaseOutside(thresholdrelease);
+  t2Slider = addSlider(imageX+20,imageY+imageHeight+60+2*ySpace/2,"t2", "T2 /", 0, 255, 128).onRelease(thresholdrelease).onReleaseOutside(thresholdrelease);
+  t3Slider = addSlider(imageX+20,imageY+imageHeight+60+3*ySpace/2,"t3", "T3 |", 0, 255, 64).onRelease(thresholdrelease).onReleaseOutside(thresholdrelease);
+  t4Slider = addSlider(imageX+20,imageY+imageHeight+60+4*ySpace/2,"t4", "T4 -", 0, 255, 32).onRelease(thresholdrelease).onReleaseOutside(thresholdrelease);
+  
   addButton("penUp", "Pen Up", leftMargin, posY+=ySpace);
 
   addButton("goHome", "Go Home", leftMargin, posY+=ySpace);
@@ -181,7 +212,7 @@ void createcp5GUI()
   addButton("save", "Save", leftMargin, posY+=ySpace);
   addButton("export", "Export",leftMargin, posY+=ySpace);
 
-
+  hideImageControls();
 
 
   //console = cp5.addConsole(myTextarea);
@@ -236,6 +267,12 @@ CallbackListener speedrelease = new CallbackListener() {
   }
 };
 
+CallbackListener thresholdrelease = new CallbackListener() {
+  public void controlEvent(CallbackEvent theEvent) {
+    calculateImage();
+  }
+};
+
 CallbackListener penrelease = new CallbackListener() {
   public void controlEvent(CallbackEvent theEvent) {
     setPenWidth(penSlider.getValue());
@@ -261,7 +298,48 @@ void controlEvent(ControlEvent theEvent) {
       println(m.get("name"));
       connect((String)m.get("name"));
     }
+    else if ((""+theEvent.getController()).indexOf("filterDropList") >=0)
+    {
+      Map m = filterDropList.getItem((int)theEvent.getController().getValue());
+      
+      imageMode = (int)theEvent.getController().getValue();
+      println("Image Mode = "+imageMode);
+      hideImageControls();
+      showImageControls();
+      calculateImage();
+
+    }
   }
+}
+
+void hideImageControls()
+{
+  filterDropList.setVisible(false);
+  pixelSizeSlider.setVisible(false);
+  t1Slider.setVisible(false);
+  t2Slider.setVisible(false);
+  t3Slider.setVisible(false);
+  t4Slider.setVisible(false);
+  penSlider.setVisible(false);
+
+}
+
+void showImageControls()
+{
+  filterDropList.setVisible(true);
+  pixelSizeSlider.setVisible(true);
+  if(imageMode == HATCH)
+  {
+    t1Slider.setVisible(true);
+    t2Slider.setVisible(true);
+    t3Slider.setVisible(true);
+    t4Slider.setVisible(true);
+  }
+  else if(imageMode == PIXEL)
+  {
+    penSlider.setVisible(true);
+  }
+
 }
 
 void setHome()
@@ -291,6 +369,7 @@ void load(ControlEvent theEvent)
     loadVectorFile();
   } else
   {
+    hideImageControls();
     clearSvg();
     clearGcode();
     clearImage();
@@ -313,6 +392,9 @@ void plot(ControlEvent theEvent)
       } 
       else if (plottingImage)
         plotNextDiamondPixel();
+        
+      else if (plottingHatch)
+        plotNextHatch();
 
       else if (plottingGcode)
         nextGcode();
@@ -338,10 +420,13 @@ void plot(ControlEvent theEvent)
       plotSvg();
     else if (gcodeData != null)
       plotGcode();
-    else if (oimg != null)
+      
+    else if(hatchPaths != null)
+      plotHatch();
+    else if (oimg != null)    
       plotDiamondImage();
       
-    if(plottingSvg || plottingImage || plottingGcode)
+    if(plottingSvg || plottingImage || plottingGcode || plottingHatch)
     {
        if(myPort == null) 
            b.setCaptionLabel("Step");

@@ -21,7 +21,7 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 final static String ICON  = "icons/penDown.png";
-final static String TITLE = "PenPlotter v0.3";
+final static String TITLE = "PenPlotter v0.4";
 
 ControlP5 cp5;
 Handle[] handles;
@@ -50,6 +50,7 @@ float stepsPerRev = 1600; // number of steps per rev includes microsteps
 float mmPerRev = 80;      // mm per rev
 
 float zoomScale = 0.75;   // screen scale controlle with mouse wheel
+float shortestSegment = 0;    // cull out svg segments shorter that is.
 
 
 int menuWidth = 110;
@@ -67,8 +68,8 @@ int offY = 0;
 int startX;              // start location of mouse drag
 int startY;
 
-int imageX = 120;        // location to draw image overlay
-int imageY = 20;
+int imageX = 130;        // location to draw image overlay
+int imageY = 10;
 
 int imageWidth = 200;   // size of image overlay
 int imageHeight = 200;
@@ -177,18 +178,21 @@ void setup() {
   zoomScale = Float.parseFloat(props.getProperty("machine.zoomScale"));
 
   cropLeft = Integer.parseInt(props.getProperty("image.cropLeft"));
+  if(cropLeft < imageX) cropLeft = imageX;
   cropRight = Integer.parseInt(props.getProperty("image.cropRight"));
+  if(cropRight > imageX+imageWidth) cropRight = imageX+imageWidth;
   cropTop = Integer.parseInt(props.getProperty("image.cropTop"));
+  if(cropTop < imageY) cropTop = imageY;
   cropBottom = Integer.parseInt(props.getProperty("image.cropBottom"));
+  if(cropBottom > imageY+imageHeight) cropBottom = imageY+imageHeight;
+  
+  shortestSegment = Float.parseFloat(props.getProperty("svg.shortestSegment"));
 
-
-  //make our canvas 200 x 200 pixels big
   listPorts();
 
   RG.init(this);
   RG.ignoreStyles(true);
   RG.setPolygonizer(RG.ADAPTATIVE);
-  //  RG.setPolygonizerAngle(80*PI/180);
 
   createcp5GUI();
 
@@ -483,8 +487,16 @@ void draw() {
 
     if (oimg != null)
     {
-      drawDiamondPixels();
-      drawPlottedPixels();
+      if(imageMode == PIXEL)
+      {
+         drawDiamondPixels();
+         drawPlottedPixels();
+      }
+      else if(imageMode == HATCH)
+      {
+        drawHatch();
+        drawPlottedHatch();
+      }
       image(oimg, imageX, imageY, imageWidth, imageHeight);
       drawImageFrame();
       drawSelector();

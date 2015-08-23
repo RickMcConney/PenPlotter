@@ -19,6 +19,7 @@ void saveProperties() {
 			props.setProperty("svg.pixelsPerInch",""+svgDpi);
 			props.setProperty("svg.name",currentFileName);
 			props.setProperty("svg.UserScale",""+userScale);
+                        props.setProperty("svg.shortestSegment",""+shortestSegment);
 
 			props.setProperty("image.pixelSize",""+pixelSize);
 			
@@ -125,11 +126,18 @@ void loadVectorFile()
       {
         File file = fc.getSelectedFile();
         if (file.getPath().endsWith(".svg"))
+        {
           sh = loadShapeFromFile(file.getPath());
+        }
         else if (gcodeFile(file.getPath()))
+        {
           loadGcode(file.getPath());
+        }
         else if (imageFile(file.getPath()))
+        {
           loadImageFile(file.getPath());
+          showImageControls();
+        }
         currentFileName = file.getPath();
         fileLoaded();
       }

@@ -334,11 +334,11 @@ void optimize(RShape shape)
   remainingPaths = optimizedPaths;
   optimizedPaths = new ArrayList<Path>();
 
-  mergePaths(3, remainingPaths);
+  mergePaths(shortestSegment, remainingPaths);
   println("number of optimized paths "+optimizedPaths.size());
 
   println("number of points "+totalPoints(optimizedPaths));  
-  removeShort(1);
+  removeShort(shortestSegment);
   println("number of opt points "+totalPoints(optimizedPaths));
 
   totalPathLength();
