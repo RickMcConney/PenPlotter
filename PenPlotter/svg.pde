@@ -269,7 +269,10 @@ void exportGcode()
       if (returned == JFileChooser.APPROVE_OPTION) 
       {
         File file = fc.getSelectedFile();
-        exportSvg(file);
+        if(sh != null)
+            exportSvg(file);
+        else if(hatchPaths != null)
+          exportHatch(file);
       }
     }
   }

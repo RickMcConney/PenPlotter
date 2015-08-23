@@ -45,6 +45,9 @@ void setPenWidth(float width)
 void clearImage()
 {
   oimg = null;
+  simage = null;
+  hatchPaths = null;
+  
   resetImage();
 }
 
@@ -425,6 +428,71 @@ void plotNextHatch()
     plottingHatch = false;
   }
 }
+
+void exportHatch(File file)
+{
+  if (hatchPaths == null) return;
+  Path p;
+  BufferedWriter writer = null;
+  try {
+    writer = new BufferedWriter( new FileWriter( file));
+
+   for(int i =0;i<hatchPaths.size();i++)
+   {
+      p = hatchPaths.get(i);
+
+      if (i == 0)
+      {
+        writer.write("G21\n"); //mm
+        writer.write("G90\n"); // absolute
+        writer.write("G0 F"+speedValue+"\n");
+      }
+      for (int j = 0; j<p.size ()-1; j++)
+      {
+
+        float x1 = p.getPoint(j).x*userScale+offX;
+        float y1 =  p.getPoint(j).y*userScale+offY;
+        float x2 = p.getPoint(j+1).x*userScale+offX;
+        float y2 =  p.getPoint(j+1).y*userScale+offY;
+
+
+        if (j == 0)
+        {
+          // pen up
+          writer.write("G0 Z"+cncSafeHeight+"\n");
+          writer.write("G0 X"+nf(x1, 0, 3) +" Y"+nf(y1, 0, 3)+"\n");
+          //pen Down
+          writer.write("G0 Z0\n");
+        }
+
+        writer.write("G1 X"+nf(x2, 0, 3) +" Y"+nf(y2, 0, 3)+"\n");
+      }
+    }
+
+
+    float x1 = 0;
+    float y1 = 0;
+
+    writer.write("G0 Z"+cncSafeHeight+"\n");
+    writer.write("G0 X"+x1 +" Y"+y1+"\n");
+  }
+  catch ( IOException e)
+  {
+    System.out.print(e);
+  }
+  finally
+  {
+    try
+    {
+      if ( writer != null)
+        writer.close( );
+    }
+    catch ( IOException e)
+    {
+    }
+  }
+}
+
   
 void drawPlottedHatch()
 {

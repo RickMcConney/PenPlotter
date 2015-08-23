@@ -504,6 +504,8 @@ void export()
 {
   if(sh != null)
     exportGcode();
+  else if(hatchPaths != null)
+    exportGcode();
 }
 
 void speedChanged(int speed)
