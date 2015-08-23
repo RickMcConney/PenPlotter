@@ -38,6 +38,7 @@ Next I wrote a simpler version of the controller that speaks gcode and uses mm u
   - The image preview shows how the pixel size and pen width will affect the plot.
   - Images can be cropped, scaled and rotated by multiples of 90 degrees
   - Images can be flipped about the X or Y axis
+  - Images can be plotted as pixels or in a crosee hatched style
 - The controller runs in processing 2 or processing 3
 
 #Compiling
@@ -79,3 +80,5 @@ Here are some screen shots of the controler.
 
 
 ![Png Plot](/ScreenShots/pngScreenShot.png?raw=true)
+
+![Hatch Plot](/ScreenShots/hatch.png?raw=true)
