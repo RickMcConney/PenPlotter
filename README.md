@@ -25,16 +25,19 @@ Next I wrote a simpler version of the controller that speaks gcode and uses mm u
     - S is steps per rev
     - P is mm per Rev
   - When processing a gcode file the pen lift is triggered by the G0 gcode G1 will lower the pen
+
 - Supports SVG files (.svg)
   - When processing a SVG file disconnected paths trigger a pen lift. 
   - The SVG paths are optimized to try and avoid needless moves.
   - The optimizer will auto join paths that touch.
   - The optimizer will remove very short lines in a path
-  - Svg files can be scaled and rotated by multiples of 90 
+  - Svg files can be scaled and rotated by multiples of 90 degrees
+  - Svg files can be flipped about the X or Y axis
   - Export svg file to gcode
 - Supports Image files (.jpg, .png, .tga, .gif)
   - The image preview shows how the pixel size and pen width will affect the plot.
   - Images can be cropped, scaled and rotated by multiples of 90 degrees
+  - Images can be flipped about the X or Y axis
 - The controller runs in processing 2 or processing 3
 
 #Compiling
