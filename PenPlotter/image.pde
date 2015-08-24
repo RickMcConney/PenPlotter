@@ -5,13 +5,17 @@ int dindex = 0;
 
 PImage simage;
 PImage oimg;
+PImage sqImage;
+
 boolean plottingImage = false;
 boolean plottingHatch = false;
+boolean plottingSquare = false;
+boolean plottingDiamond = false;
 
 int pixelSize = 8;
 int skipColor;
 int lastPixel;
-int xinc = 1;
+
 int alpha = 255;
 float penWidth = 0.5;
 int range = 255/(int)((float)(pixelSize)/penWidth);
@@ -21,10 +25,10 @@ int DIR_SW= 3;
 int DIR_NW = 4;
 int pixelDir = DIR_NE;
 
-int xindex = 0;
-int yindex = 0;
+
 int HATCH = 0;
-int PIXEL = 1;
+int DIAMOND = 1;
+int SQUARE = 2;
 int imageMode = HATCH;
 
 void setPenWidth(float width)
@@ -55,8 +59,8 @@ void resetImage()
 {
     plottingImage = false;
     plottingHatch = false;
-    xindex = 0;
-    yindex = 0;
+    plottingDiamond = false;
+    plottingSquare = false;
     dindex = 0;
     plotDone();
 }
@@ -158,8 +162,8 @@ void setPixelSize(int value)
 
   if (!plottingImage)
   {
-    pixelSize = value;//(value/2)*2;
-    //pixelLabel.setText("Pixel Size "+pixelSize);
+    pixelSize = value;
+
     int levels = (int)((float)(pixelSize)/penWidth);
     if (levels < 1) levels = 1;
     if (levels > 255) levels = 255;
@@ -171,13 +175,7 @@ void setPixelSize(int value)
   }
 }
 
-void calculateImage()
-{
-  if(imageMode == PIXEL)
-    calculateDiamondPixels(simage, pixelSize);
-  else if(imageMode == HATCH)
-    hatch(simage);
-}
+
 
 
 void loadImageFile(String fileName)
@@ -198,38 +196,19 @@ void loadImageFile(String fileName)
   cropImage(cropLeft, cropTop, cropRight, cropBottom);
 }
 
-class ImageFileFilter extends javax.swing.filechooser.FileFilter 
-{
-  public boolean accept(File file) {
-    String filename = file.getName();
-    filename.toLowerCase();
-    if (file.isDirectory() || filename.endsWith(".png") || filename.endsWith(".jpg") || filename.endsWith(".jpeg")) 
-      return true;
-    else
-      return false;
-  }
-  public String getDescription() {
-    return "Image files (PNG or JPG)";
-  }
-}
 
 void plotImage()
 {
   plottingImage = true;
-  xindex = 0;
-  yindex = 0;
-  xinc = 1;
-  nextPixel();
+
+  if(imageMode == DIAMOND)
+    plotDiamondImage();
+  else if(imageMode == HATCH)
+    plotHatch();
+  else if(imageMode == SQUARE)
+    plotSquareImage();
 }
 
-void nextPixel()
-{
-  int width = oimg.width;
-  int offset = width/2;
-  int x = (xindex*pixelSize)+machineWidth/2-offset;
-  int y = (yindex*pixelSize)+homeY;
-  plotImagePixel(oimg, pixelSize, x, y);
-}
 
 int getBrightness(PImage image, int x, int y, int size)
 {
@@ -277,47 +256,54 @@ float getMachineB(float cX, float cY)
   return sqrt(sq((machineWidth-cX))+cY*cY);
 }
 
+void plotHatch()
+{
+  dindex = 0;
+  plottingHatch = true;
+  plottingStarted();
+  plotNextHatch();
+}
+
+void plotSquareImage()
+{
+  dindex = 0; 
+  plottingSquare = true;
+  plottingStarted();
+  plotNextSquarePixel();
+}
 
 void plotDiamondImage()
 {
-
-  plottingStarted();
   dindex = 0;
+  plottingDiamond = true;
+  plottingStarted();
   pixelDir = DIR_NE;
   plotNextDiamondPixel();
 }
 
-int getDir(long targetA, long targetB, long sourceA, long sourceB)
+void plotNextSquarePixel()
 {
-  int dir = DIR_SW;
-
-  if (targetA<sourceA && targetB<sourceB)
+  if (dindex < pixels.size()) 
   {
-    dir = DIR_NW;
-  } else if (targetA>sourceA && targetB>sourceB)
-  {
-    dir = DIR_SE;
-  } else if (targetA<sourceA && targetB>sourceB)
-  {
-    dir = DIR_SW;
-  } else if (targetA>sourceA && targetB<sourceB)
-  {
-    dir = DIR_NE;
-  } else if (targetA==sourceA && targetB<sourceB)
-  {
-    dir = DIR_NE;
-  } else if (targetA==sourceA && targetB>sourceB)
-  {
-    dir = DIR_SW;
-  } else if (targetA<sourceA && targetB==sourceB)
-  {
-    dir = DIR_NW;
-  } else if (targetA>sourceA && targetB==sourceB)
-  {
-    dir = DIR_SE;
+      PVector p = pixels.get(dindex);  
+      if (dindex == 0)
+      {  
+        sendPenUp();
+        sendMoveG0((p.x+offX),(p.y+offY));
+        sendPenDown();
+        sendSqPixel((p.x+offX),(p.y+offY),pixelSize,(int)p.z);
+      }
+      else
+      {
+         sendSqPixel((p.x+offX),(p.y+offY),pixelSize,(int)p.z);
+      }
+      dindex++;
   }
-
-  return dir;
+  else
+  {
+    sendMotorOff();
+    plottingStopped();
+  }
 }
 
 void plotNextDiamondPixel()
@@ -368,6 +354,28 @@ void plotNextDiamondPixel()
   }
 }
 
+void drawSquarePixel(int i,int a)
+{
+  PVector r = pixels.get(i);
+
+  fill(color(r.z, r.z, r.z, a));
+  stroke(color(r.z, r.z, r.z, a));
+  rect(scaleX(r.x+offX),scaleY(r.y+offY),pixelSize*zoomScale,pixelSize*zoomScale);
+
+}
+
+void drawSquarePixels()
+{
+  for(int i = 0;i<pixels.size();i++)
+  {
+    if(i < dindex)
+      drawSquarePixel(i,255);
+    else
+      drawSquarePixel(i,alpha);
+  }
+}
+
+
 void drawDiamonPixel(int i, int a)
 {
   PVector r = raw.get(i);
@@ -385,29 +393,19 @@ void drawDiamonPixel(int i, int a)
   quad(scaleX(tx+offX), scaleY(ty+offY), scaleX(rx+offX), scaleY(ry+offY), scaleX(bx+offX), scaleY(by+offY), scaleX(lx+offX), scaleY(ly+offY));
 }
 
-void drawPlottedPixels()
-{
-  for (int i = 0; i<dindex; i++)
-  {
-    drawDiamonPixel(i, 255);
-  }
-}
 
 void drawDiamondPixels()
 {
   for (int i = 0; i<pixels.size (); i++)
   {
-    drawDiamonPixel(i, alpha);
+    if(i < dindex)
+      drawDiamonPixel(i, 255);
+    else
+      drawDiamonPixel(i, alpha);
   }
 }
 
-void plotHatch()
-{
-  dindex = 0;
-  plottingHatch = true;
-  plotNextHatch();
-  alpha = 64;
-}
+
 
 void plotNextHatch()
 {
@@ -418,7 +416,7 @@ void plotNextHatch()
     sendMoveG0(p.first().x*userScale+homeX+offX,p.first().y*userScale+homeY+offY);
     sendPenDown();
     sendMoveG1(p.last().x*userScale+homeX+offX,p.last().y*userScale+homeY+offY);
-    updatePos(p.last().x*userScale+homeX+offX, p.last().y*userScale+homeY+offY);
+
     dindex++;
   }
   else
@@ -493,94 +491,40 @@ void exportHatch(File file)
   }
 }
 
-  
-void drawPlottedHatch()
-{
-    if(hatchPaths == null) return;
-  Path p;
-  stroke(color(0, 0, 0, 255));
-  for(int i =0;i<dindex;i++)
-  {
-    if(dindex < hatchPaths.size())
-    {
-      p = hatchPaths.get(i);
-      sline(p.first().x*userScale+homeX+offX,p.first().y*userScale+homeY+offY,p.last().x*userScale+homeX+offX,p.last().y*userScale+homeY+offY);
-    }
-  }
-}
+ 
+
 void drawHatch()
 {
   if(hatchPaths == null) return;
   Path p;
-  stroke(color(0, 0, 0, alpha));
+
   for(int i =0;i<hatchPaths.size();i++)
   {
     p = hatchPaths.get(i);
-
-    sline(p.first().x*userScale+homeX+offX,p.first().y*userScale+homeY+offY,p.last().x*userScale+homeX+offX,p.last().y*userScale+homeY+offY);
+    if(i < dindex)
+        stroke(color(0, 0, 0, 255));
+     else
+       stroke(color(0, 0, 0, alpha));
+       
+     sline(p.first().x*userScale+homeX+offX,p.first().y*userScale+homeY+offY,p.last().x*userScale+homeX+offX,p.last().y*userScale+homeY+offY);
+   
   }
 }
 
 
 
-boolean addPaths(ArrayList<Path> paths,boolean reverse)
+
+void calculateImage()
 {
-  if(paths.size() > 0)
-  {
-      if(reverse)
-      {
-          for(int i = paths.size()-1;i>=0;i--)
-          {
-            paths.get(i).reverse();
-            hatchPaths.add(paths.get(i));
-          }
-      }
-      else
-      {
-          for(int i = 0;i<paths.size();i++)
-            hatchPaths.add(paths.get(i));
-      }
-      return !reverse;
-  }
-  return reverse;
+  if(imageMode == DIAMOND)
+    calculateDiamondPixels(simage, pixelSize);
+  else if(imageMode == HATCH)
+    calculateHatch(simage);
+  else if(imageMode == SQUARE)
+    calculateSquarePixels(simage,pixelSize);  
 }
 
-ArrayList<Path> findPaths(PImage image,int start,int len,int step,int threshold)
-{
-  boolean up = true;
-  color c;
-  int x;
-  int y;
-  Path path = null;
-  ArrayList<Path> paths = new ArrayList<Path>(); 
-  int p = start;
-  for(int i = 0;i<len;i++)
-  {
-    if(p >= image.pixels.length) return paths;
-     c = image.pixels[p];
-     if(up && brightness(c) < threshold)
-     {
-         path = new Path();
-         x = p%image.width;
-         y = p/image.width;
-         path.addPoint(x,y);
-         up = false;
-     }
-     else if(!up && brightness(c) > threshold)
-     {
-         x = p%image.width;
-         y = p/image.width;
-         path.addPoint(x,y);
-         paths.add(path);          
-         up = true;           
-     } 
-     p+=step;  
-        
-  }
-  return paths;
-}
-
-public void  hatch(PImage image)
+public void  calculateHatch(PImage image)
 {
   int size = pixelSize;
   hatchPaths = new  ArrayList<Path>();
@@ -664,6 +608,63 @@ public void  hatch(PImage image)
 
 }
 
+boolean addPaths(ArrayList<Path> paths,boolean reverse)
+{
+  if(paths.size() > 0)
+  {
+      if(reverse)
+      {
+          for(int i = paths.size()-1;i>=0;i--)
+          {
+            paths.get(i).reverse();
+            hatchPaths.add(paths.get(i));
+          }
+      }
+      else
+      {
+          for(int i = 0;i<paths.size();i++)
+            hatchPaths.add(paths.get(i));
+      }
+      return !reverse;
+  }
+  return reverse;
+}
+
+ArrayList<Path> findPaths(PImage image,int start,int len,int step,int threshold)
+{
+  boolean up = true;
+  color c;
+  int x;
+  int y;
+  Path path = null;
+  ArrayList<Path> paths = new ArrayList<Path>(); 
+  int p = start;
+  for(int i = 0;i<len;i++)
+  {
+    if(p >= image.pixels.length) return paths;
+     c = image.pixels[p];
+     if(up && brightness(c) < threshold)
+     {
+         path = new Path();
+         x = p%image.width;
+         y = p/image.width;
+         path.addPoint(x,y);
+         up = false;
+     }
+     else if(!up && brightness(c) > threshold)
+     {
+         x = p%image.width;
+         y = p/image.width;
+         path.addPoint(x,y);
+         paths.add(path);          
+         up = true;           
+     } 
+     p+=step;  
+        
+  }
+  return paths;
+}
+
 void calculateDiamondPixels(PImage image, int size)
 {
   int inc = size;
@@ -674,10 +675,10 @@ void calculateDiamondPixels(PImage image, int size)
   int lastColor = skipColor;
   boolean draw = false;
 
-  int as = (int)getMachineA(machineWidth/2-image.width/2, homeY);
-  int ae = (int)getMachineA(machineWidth/2+image.width/2, homeY+image.height);
-  int bss = (int)getMachineB(machineWidth/2+image.width/2, homeY);
-  int bee = (int)getMachineB(machineWidth/2-image.width/2, homeY+image.height);
+  int as = (int)getMachineA(homeX-image.width/2, homeY);
+  int ae = (int)getMachineA(homeX+image.width/2, homeY+image.height);
+  int bss = (int)getMachineB(homeX+image.width/2, homeY);
+  int bee = (int)getMachineB(homeX-image.width/2, homeY+image.height);
 
   // make b a multiple of size from a
   int bas = (int)getMachineB(machineWidth/2-image.width/2, homeY);
@@ -750,100 +751,47 @@ void calculateDiamondPixels(PImage image, int size)
   }
 }
 
-void plotImagePixel(PImage image, int size, int x, int y)
-{
-  boolean skipped = false;
-  int width = image.width;
-  int height = image.height; 
-  if (yindex >=height/size)
-  {
-    plottingImage = false;
-    plotDone();
-    return;
-  }
-
-  int b = getBrightness(image, xindex*size, yindex*size, size);
-
-  if (xindex == 0 && yindex == 0)
-  {
-    skipColor = (int)b;
-    lastPixel = skipColor;
-  }
-  if (skipColor != (int)b)
-  {
-    lastPixel = (int)b;
-    sendSqPixel(x,y,size,(int)b);
-    fill((int)b);
-    rect(scaleX(x), scaleY(y), size*zoomScale, size*zoomScale);
-  } else if (lastPixel != skipColor && skipColor == (int)b)
-  {
-    lastPixel = (int)b;
-    sendSqPixel(x,y,size,(int)b);
-    fill((int)b);
-    rect(scaleX(x), scaleY(y), size*zoomScale, size*zoomScale);
-  } else
-  {
-    skipped = true;
-  }
-
-
-  xindex+= xinc;
-  if (xindex >= width/size)
-  {
-    xindex = width/size-1;
-    xinc = -1;
-    yindex++;
-    lastPixel = skipColor;
-  } else if (xindex <0)
-  {
-    xindex = 0;
-    xinc = 1;
-    yindex++;
-    lastPixel = skipColor;
-  }
-  if (skipped)
-  {
-    nextPixel();
-  }
-}
-
-PImage getPixels(PImage image, int size)
+void  calculateSquarePixels(PImage image, int size)
 {
   int width = image.width;
   int height = image.height;
-  PImage output = new PImage(width, height);
-  output.copy(image, 0, 0, width, height, 0, 0, width, height);  
-  output.loadPixels();
-
-  for (int x = 0; x<width; x+=size)
+  int d;
+  int shade;
+  pixels.clear();
+  
+  int sx = homeX-image.width/2;
+  int sy = homeY;
+  boolean reverse = true;
+  int skipColor = getBrightness(image, 0, 0, size);
+  
+  for (int y = 0; y<height; y+=size)
   {
-    for (int y = 0; y<height; y+=size)
+    reverse = !reverse;
+    if(!reverse)
     {
-      float totalB = 0;
-      float count = 0;
-      for (int j=0; j<size; j++)
+      for (int x = 0; x<width; x+=size)
       {
-        for (int k = 0; k<size; k++)
-        { 
-          int p = (y+k)*width+x+j;
-          color c = output.pixels[p];
-          totalB += brightness(c);
-          count++;
+        d = getBrightness(image, x, y, size);
+        if(d != skipColor)
+        {
+          shade = (d/range)*range;
+          pixels.add(new PVector(sx+x, sy+y, shade)); 
         }
       }
-      float b = totalB/count;
-      for (int j=0; j<size; j++)
+    }
+    else
+    {
+      for (int x = width-1; x>=0; x-=size)
       {
-        for (int k = 0; k<size; k++)
-        { 
-          int p = (y+k)*width+x+j;
-          output.pixels[p] = color((int)b);
+        d = getBrightness(image, x, y, size);
+        if(d!= skipColor)
+        {
+          shade = (d/range)*range;
+          pixels.add(new PVector(sx+x, sy+y, shade)); 
         }
       }
     }
   }
-  output.updatePixels();
-  return output;
 }
 
 void plottingStarted()
@@ -854,7 +802,10 @@ void plottingStarted()
 
 void plottingStopped()
 {
+  plottingHatch = false;
   plottingImage = false;
+  plottingDiamond = false;
+  plottingSquare = false;
   plotDone();
   alpha = 255;
 }

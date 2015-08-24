@@ -156,7 +156,7 @@ boolean gcodeFile(String filename)
 }
 boolean imageFile(String filename)
 {
-  if (filename.endsWith(".png") || filename.endsWith(".jpg") ||
+  if (filename.endsWith(".png") || filename.endsWith(".jpg") || filename.endsWith(".JPG") ||
     filename.endsWith(".gif") || filename.endsWith(".tga"))
     return true;
   return false;

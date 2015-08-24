@@ -6,7 +6,6 @@ int posY = 10;
 int ySpace = 36;
 int rotation = 0;
 
-//Println console;
 Slider pixelSizeSlider;
 Slider speedSlider;
 Slider scaleSlider;
@@ -25,7 +24,9 @@ PImage pauseImg;
 PImage plotImg;
 MyButton loadButton;
 MyButton plotButton;
-String[] filters = {"Hatch","Pixel"};
+MyButton penUpButton;
+String[] filters = {"Hatch","Diamond","Square"};
+
 class MyButton extends Button {
   public PImage img;
 
@@ -205,7 +206,7 @@ void createcp5GUI()
   t3Slider = addSlider(imageX+20,imageY+imageHeight+60+3*ySpace/2,"t3", "T3 |", 0, 255, 64).onRelease(thresholdrelease).onReleaseOutside(thresholdrelease);
   t4Slider = addSlider(imageX+20,imageY+imageHeight+60+4*ySpace/2,"t4", "T4 -", 0, 255, 32).onRelease(thresholdrelease).onReleaseOutside(thresholdrelease);
   
-  addButton("penUp", "Pen Up", leftMargin, posY+=ySpace);
+  penUpButton = addButton("penUp", "Pen Up", leftMargin, posY+=ySpace);
 
   addButton("goHome", "Go Home", leftMargin, posY+=ySpace);
   addButton("off", "Motors Off", leftMargin, posY+=ySpace);
@@ -213,11 +214,8 @@ void createcp5GUI()
   addButton("export", "Export",leftMargin, posY+=ySpace);
 
   hideImageControls();
+  showPenDown();
 
-
-  //console = cp5.addConsole(myTextarea);
-
-  // myTextarea.setVisible(false);
 }
 
 CallbackListener toFront = new CallbackListener() {
@@ -335,7 +333,11 @@ void showImageControls()
     t3Slider.setVisible(true);
     t4Slider.setVisible(true);
   }
-  else if(imageMode == PIXEL)
+  else if(imageMode == DIAMOND)
+  {
+    penSlider.setVisible(true);
+  }
+  else if(imageMode == SQUARE)
   {
     penSlider.setVisible(true);
   }
@@ -345,7 +347,7 @@ void showImageControls()
 void setHome()
 {
   sendHome();
-  updatePos(homeX, homeY);
+
 }
 
 void plotDone()
@@ -390,8 +392,10 @@ void plot(ControlEvent theEvent)
           plotLine();
         
       } 
-      else if (plottingImage)
+      else if (plottingDiamond)
         plotNextDiamondPixel();
+      else if (plottingSquare)
+        plotNextSquarePixel();
         
       else if (plottingHatch)
         plotNextHatch();
@@ -420,13 +424,10 @@ void plot(ControlEvent theEvent)
       plotSvg();
     else if (gcodeData != null)
       plotGcode();
-      
-    else if(hatchPaths != null)
-      plotHatch();
     else if (oimg != null)    
-      plotDiamondImage();
+      plotImage();
       
-    if(plottingSvg || plottingImage || plottingGcode || plottingHatch)
+    if(plottingSvg || plottingImage || plottingGcode)
     {
        if(myPort == null) 
            b.setCaptionLabel("Step");
@@ -463,6 +464,17 @@ void mirrorY()
   updateScale();
   flipImgY();
 }
+void showPenUp()
+{
+    penUpButton.setCaptionLabel("Pen Up");
+    penUpButton.setImg(penDownImg);
+}
+
+void showPenDown()
+{
+    penUpButton.setCaptionLabel("Pen Down");
+    penUpButton.setImg(penUpImg);
+}
 
 void penUp(ControlEvent theEvent)
 {
@@ -471,13 +483,11 @@ void penUp(ControlEvent theEvent)
   if (b.getCaptionLabel().getText().indexOf("Up") > 0)
   {
     sendPenUp();
-    b.setCaptionLabel("Pen Down");
-    ((MyButton)b).setImg(penDownImg);
+
   } else
   {
     sendPenDown();
-    b.setCaptionLabel("Pen Up");
-    ((MyButton)b).setImg(penUpImg);
+
   }
 }
 
@@ -487,7 +497,6 @@ void goHome()
 
   sendPenUp();
   sendMoveG0(homeX,homeY);
-  updatePos(homeX, homeY);
 }
 
 void off()

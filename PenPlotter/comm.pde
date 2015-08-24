@@ -63,35 +63,42 @@ void connect(String name)
 }
 void sendMotorOff()
 {
+  motorsOn = false;
   send("M84\n");
 }
 void moveDeltaX(float x)
 {
   send("G0 X"+x+"\n");
+  updatePos(currentX+x,currentY);
 }
 
 void moveDeltaY(float y)
 {
   send("G0 Y"+y+"\n");
+  updatePos(currentX,currentY+y);
 }
 void sendMoveG0(float x, float y)
 {
   send("G0 X"+x+" Y"+y+"\n");
+  updatePos(x,y);
 }
 
 void sendMoveG1(float x, float y)
 {
   send("G1 X"+x+" Y"+y+"\n");
+  updatePos(x,y);
 }
 
 void sendG2(float x, float y,float i, float j)
 {
   send("G2 X"+x+" Y"+y+" I"+i+" J"+j+"\n");
+  updatePos(x,y);
 }
 
 void sendG3(float x, float y,float i, float j)
 {
   send("G3 X"+x+" Y"+y+" I"+i+" J"+j+"\n");
+  updatePos(x,y);
 }
 
 void sendSpeed(int speed)
@@ -102,6 +109,7 @@ void sendSpeed(int speed)
 void sendHome()
 {
   send("M1 Y"+homeY+"\n");
+  updatePos(homeX, homeY);
 }
 
 void sendSpeed()
@@ -124,6 +132,7 @@ void sendPenUp()
   send("G4 P250\n");
   send("M340 P3 S2350\n");
   send("G4 P250\n");
+  showPenDown();
 }
 
 void sendPenDown()
@@ -131,6 +140,7 @@ void sendPenDown()
   send("G4 P250\n");
   send("M340 P3 S1500\n");
   send("G4 P250\n");
+  showPenUp();
 }
 void sendAbsolute()
 {
@@ -151,6 +161,7 @@ void sendSqPixel(float x,float y,int size,int b)
 {
   //todo 
    send("M2 X"+x+" Y"+y+" P"+size+" S"+b+"\n");
+   updatePos(x,y);
 }
     
 void initArduino()
@@ -167,8 +178,11 @@ public void clearQueue()
 }
 public void queue(String msg)
 {
-  print("Q "+msg);
-  buf.add(msg);
+  if (myPort != null)
+  {
+   // print("Q "+msg);
+    buf.add(msg);
+  }
 }
 
 public void nextMsg()
@@ -183,8 +197,10 @@ public void nextMsg()
   {
     if (plottingSvg)
       plotLine();
-    if (plottingImage)
+    if (plottingDiamond)
       plotNextDiamondPixel();
+    if(plottingSquare)
+      plotNextSquarePixel();
     if (plottingHatch)
       plotNextHatch();
     if (plottingGcode)
@@ -206,11 +222,6 @@ public void oksend(String msg)
 
   if (myPort != null)
   {
-    if (msg.indexOf("G") >= 0)
-      motorsOn = true;
-    else if (msg.indexOf("M84") >=0)
-      motorsOn = false;
-
     myPort.write(msg);
     myTextarea.setText(" "+msg);
   }

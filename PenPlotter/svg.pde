@@ -30,8 +30,9 @@ void drawPlottedLine()
   {
     return;
   }
-  currentX = 420;
-  currentY = 250;
+  float cx = homeX;
+  float cy = homeY;
+
   for (int i = 0; i<optimizedPaths.size (); i++)
   {
     for (int j = 0; j<optimizedPaths.get (i).size()-1; j++)
@@ -47,14 +48,17 @@ void drawPlottedLine()
       {
         // pen up
 
-        stroke(0, 255, 0); //green
-        sline(currentX, currentY, x1, y1);
-        updatePos(x1, y1);
+        stroke(rapidColor); 
+        sline(cx, cy, x1, y1);
+        cx = x1;
+        cy = y1;
       }
 
-      stroke(255, 0, 0); //red
-      sline(currentX, currentY, x2, y2);
-      updatePos(x2, y2);
+      stroke(drawColor); 
+      sline(cx, cy, x2, y2);
+      cx = x2;
+      cy = y2;
+
 
 
       if (i == svgPathIndex && j == svgLineIndex)
@@ -109,7 +113,7 @@ void plotLine()
     plotDone();
     float x1 = homeX;
     float y1 = homeY;
-    updatePos(x1, y1);
+
     sendPenUp();
     sendMoveG0(x1,y1);
     sendMotorOff();
@@ -209,26 +213,34 @@ void rotateSvg(int rotation)
 
 void drawSvg()
 {
-  lastX = homeX;
-  lastY = homeY;
+  lastX = -offX;
+  lastY = -offY;
   strokeWeight(0.1);
   noFill();
+  
+
   for (int i = 0; i<optimizedPaths.size (); i++) {
     Path p = optimizedPaths.get(i);
 
-    stroke(0, 255, 0);
-
-    sline(lastX*scaleX+homeX+offX, lastY*scaleY+homeY+offY, p.getPoint(0).x*scaleX+homeX+offX, p.getPoint(0).y*scaleY+homeY+offY);
-
+    stroke(rapidColor);
+    if(i == 0)
+        sline(homeX, homeY, p.first().x*scaleX+homeX+offX, p.first().y*scaleY+homeY+offY);
+    else
+        sline(lastX*scaleX+homeX+offX, lastY*scaleY+homeY+offY, p.first().x*scaleX+homeX+offX, p.first().y*scaleY+homeY+offY);
+        
     stroke(penColor);
     beginShape();
     for (int j = 0; j<p.size (); j++) {
       vertex(scaleX(p.getPoint(j).x*scaleX+homeX+offX), scaleY(p.getPoint(j).y*scaleY+homeY+offY));
     }
     endShape();
-    lastX = p.getPoint(p.size()-1).x;
-    lastY = p.getPoint(p.size()-1).y;
+    lastX = p.last().x;
+    lastY = p.last().y;
   }
+  
+  stroke(rapidColor);
+  sline(lastX*scaleX+homeX+offX, lastY*scaleY+homeY+offY, homeX, homeY);
+
 }
 
 
@@ -315,13 +327,8 @@ void optimize(RShape shape)
     }
   }
 
-
   println("Original number of paths "+remainingPaths.size());
   
-  //Prim prim = new Prim();
- // optimizedPaths = prim.mst(remainingPaths);
-
-
   Path path = nearestPath(homeX, homeY, remainingPaths);
   optimizedPaths.add(path); 
 
@@ -333,17 +340,18 @@ void optimize(RShape shape)
     optimizedPaths.add(path);
   }
 
+  if(shortestSegment > 0)
+  {
+    remainingPaths = optimizedPaths;
+    optimizedPaths = new ArrayList<Path>();
 
-  remainingPaths = optimizedPaths;
-  optimizedPaths = new ArrayList<Path>();
+    mergePaths(shortestSegment, remainingPaths);
+    println("number of optimized paths "+optimizedPaths.size());
 
-  mergePaths(shortestSegment, remainingPaths);
-  println("number of optimized paths "+optimizedPaths.size());
-
-  println("number of points "+totalPoints(optimizedPaths));  
-  removeShort(shortestSegment);
-  println("number of opt points "+totalPoints(optimizedPaths));
-
+    println("number of points "+totalPoints(optimizedPaths));  
+    removeShort(shortestSegment);
+    println("number of opt points "+totalPoints(optimizedPaths));
+  }
   totalPathLength();
 
 }
@@ -366,9 +374,8 @@ int totalPoints(ArrayList<Path> list)
 
 void mergePaths(float len, ArrayList <Path> remainingPaths)
 {
-
-  optimizedPaths.add(remainingPaths.get(0));
-  Path cur = optimizedPaths.get(0);
+  Path cur = remainingPaths.get(0);
+  optimizedPaths.add(cur);
 
   for (int i = 1; i<remainingPaths.size (); i++)
   {
