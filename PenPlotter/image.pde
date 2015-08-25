@@ -51,6 +51,8 @@ void clearImage()
   oimg = null;
   simage = null;
   hatchPaths = null;
+  pixels.clear();
+  raw.clear();
   
   resetImage();
 }
@@ -75,10 +77,10 @@ void flipImgX()
   PImage rimage = new PImage(cols, rows);
   rimage.loadPixels();
 
-  for (int i=0; i<cols; i++) {
-    for (int j=0; j<rows; j++) {
-      int ps = i*cols+(cols-1-j);
-      int pd = i*cols+j;
+  for (int x=0; x<cols; x++) {
+    for (int y=0; y<rows; y++) {
+      int ps = y*cols+(cols-1-x);
+      int pd = y*cols+x;
       if (pd < rimage.pixels.length && ps < oimg.pixels.length)
         rimage.pixels[pd] = oimg.pixels[ps];
     }
@@ -98,10 +100,10 @@ void flipImgY()
   PImage rimage = new PImage(cols, rows);
   rimage.loadPixels();
 
-  for (int i=0; i<cols; i++) {
-    for (int j=0; j<rows; j++) {
-      int ps = cols*(cols-1-i)+j;
-      int pd = i*cols+j;
+  for (int x=0; x<cols; x++) {
+    for (int y=0; y<rows; y++) {
+      int ps = cols*(rows-1-y)+x;
+      int pd = y*cols+x;
       if (pd < rimage.pixels.length && ps < oimg.pixels.length)
         rimage.pixels[pd] = oimg.pixels[ps];
     }
@@ -236,6 +238,32 @@ int getBrightness(PImage image, int x, int y, int size)
     return 0;
 }
 
+int getHue(PImage image, int x, int y, int size)
+{
+  int width = image.width;
+  int height = image.height;
+  int totalB = 0;
+  int count = 0;
+  if (x <0 || x > width-1 || y < 0 || y> height-1) return -1;
+  for (int j=0; j<size; j++)
+  {
+    for (int k = 0; k<size; k++)
+    { 
+      int p = (y+k)*width+x+j;
+      if (p >= 0 && p <image.pixels.length)
+      {
+        color c = image.pixels[p];
+        totalB += hue(c);
+        count++;
+      }
+    }
+  }
+  if (count > 0) 
+    return totalB/count;
+  else
+    return 0;
+}
+
 float getCartesianX(float aPos, float bPos)
 {
   float calcX = (machineWidth*machineWidth - bPos*bPos + aPos*aPos) / (machineWidth*2);
@@ -356,12 +384,14 @@ void plotNextDiamondPixel()
 
 void drawSquarePixel(int i,int a)
 {
-  PVector r = pixels.get(i);
+  if(i < pixels.size())
+  {
+    PVector r = pixels.get(i);
 
-  fill(color(r.z, r.z, r.z, a));
-  stroke(color(r.z, r.z, r.z, a));
-  rect(scaleX(r.x+offX),scaleY(r.y+offY),pixelSize*zoomScale,pixelSize*zoomScale);
-
+    fill(color(r.z, r.z, r.z, a));
+    stroke(color(r.z, r.z, r.z, a));
+    rect(scaleX(r.x+offX),scaleY(r.y+offY),pixelSize*zoomScale,pixelSize*zoomScale);
+  }
 }
 
 void drawSquarePixels()
@@ -378,19 +408,22 @@ void drawSquarePixels()
 
 void drawDiamonPixel(int i, int a)
 {
-  PVector r = raw.get(i);
-  float tx = getCartesianX(r.x, r.y);
-  float ty = getCartesianY(tx, r.x);
-  float lx = getCartesianX(r.x, r.y+pixelSize);
-  float ly = getCartesianY(lx, r.x);
-  float bx = getCartesianX(r.x+pixelSize, r.y+pixelSize);
-  float by = getCartesianY(bx, r.x+pixelSize);
-  float rx = getCartesianX(r.x+pixelSize, r.y);
-  float ry = getCartesianY(rx, r.x+pixelSize);
+    if(i < pixels.size())
+  {
+    PVector r = raw.get(i);
+    float tx = getCartesianX(r.x, r.y);
+    float ty = getCartesianY(tx, r.x);
+    float lx = getCartesianX(r.x, r.y+pixelSize);
+    float ly = getCartesianY(lx, r.x);
+    float bx = getCartesianX(r.x+pixelSize, r.y+pixelSize);
+    float by = getCartesianY(bx, r.x+pixelSize);
+    float rx = getCartesianX(r.x+pixelSize, r.y);
+    float ry = getCartesianY(rx, r.x+pixelSize);
 
-  fill(color(r.z, r.z, r.z, a));
-  stroke(color(r.z, r.z, r.z, a));
-  quad(scaleX(tx+offX), scaleY(ty+offY), scaleX(rx+offX), scaleY(ry+offY), scaleX(bx+offX), scaleY(by+offY), scaleX(lx+offX), scaleY(ly+offY));
+    fill(color(r.z, r.z, r.z, a));
+    stroke(color(r.z, r.z, r.z, a));
+    quad(scaleX(tx+offX), scaleY(ty+offY), scaleX(rx+offX), scaleY(ry+offY), scaleX(bx+offX), scaleY(by+offY), scaleX(lx+offX), scaleY(ly+offY));
+  }
 }
 
 
@@ -516,6 +549,7 @@ void drawHatch()
 
 void calculateImage()
 {
+  plottingStopped();
   if(imageMode == DIAMOND)
     calculateDiamondPixels(simage, pixelSize);
   else if(imageMode == HATCH)
@@ -537,52 +571,79 @@ public void  calculateHatch(PImage image)
   
   boolean reverse = false;
 
-  for(int x = image.width-1;x>=0;x-=size)
-  {      
-     paths = findPaths(image,x,image.width-1-x,image.width+1,threshold);      
+  for(int x = ((image.width-1)/size)*size;x>=0;x-=size)
+  {     
+     if(image.height >= image.width) 
+     { 
+         paths = findPaths(image,x,image.width-1-x,image.width+1,threshold);  
+     }
+     else
+     {
+         if(x >= image.width-image.height)
+             paths = findPaths(image,x,image.width-1-x,image.width+1,threshold);  
+          else
+             paths = findPaths(image,x,image.height-1,image.width+1,threshold);  
+          
+     }    
      reverse = addPaths(paths,reverse);
 
   }
   
 
-  for(int y = 0; y < image.height;y+=size)
+  for(int y = size; y < image.height;y+=size)
   {
 
      if(image.height <= image.width)
-       paths = findPaths(image,y*image.width,image.height-1-y,image.width+1,threshold);
+     {
+         paths = findPaths(image,y*image.width,image.height-1-y,image.width+1,threshold);
+     }
      else
      {
-       if(y >= image.width)
+       if(y >= image.height-image.width)
           paths = findPaths(image,y*image.width,image.height-1-y,image.width+1,threshold);
        else
-         paths = findPaths(image,y*image.width,image.width,image.width+1,threshold);
+         paths = findPaths(image,y*image.width,image.width-1,image.width+1,threshold);
      }
      reverse = addPaths(paths,reverse);    
   }
   
-  
+
   // diag down left
   threshold = (int)t2Slider.getValue(); 
 
   for(int x = 0;x<image.width;x+=size)
-  {      
-     paths = findPaths(image,x,x,image.width-1,threshold);      
-     reverse = addPaths(paths,reverse);
-
+  {    
+      if(image.height >= image.width) 
+      { 
+         paths = findPaths(image,x,x,image.width-1,threshold);      
+      }
+      else
+      {
+        if(x >= image.width-image.height)
+        {
+           paths = findPaths(image,x,image.height-1,image.width-1,threshold); 
+        }
+        else
+        {
+           paths = findPaths(image,x,image.height-1-x,image.width-1,threshold); 
+        }
+      }
+      reverse = addPaths(paths,reverse);
   }
   
 
-  for(int y = 1; y < image.height;y+=size)
-  {
-    
+  for(int y = size; y < image.height;y+=size)
+  {    
      if(image.height <= image.width)
-       paths = findPaths(image,y*image.width-1,image.height-1-y,image.width-1,threshold);
+     { 
+           paths = findPaths(image,y*image.width-1,image.height-1-y,image.width-1,threshold);       
+     }
      else
      {
-      if(y >= image.width)
+      if(y >= image.height-image.width)
           paths = findPaths(image,y*image.width-1,image.height-1-y,image.width-1,threshold);
        else
-         paths = findPaths(image,y*image.width-1,image.width,image.width-1,threshold);
+         paths = findPaths(image,y*image.width-1,image.width-1,image.width-1,threshold);
      }
      reverse = addPaths(paths,reverse); 
      
@@ -602,7 +663,7 @@ public void  calculateHatch(PImage image)
 
   for(int y = 0;y<image.height;y+=size)
   {
-     paths = findPaths(image,y*image.width,image.width,1,threshold);      
+     paths = findPaths(image,y*image.width,image.width-1,1,threshold);      
      reverse = addPaths(paths,reverse); 
   }
 
@@ -646,14 +707,14 @@ ArrayList<Path> findPaths(PImage image,int start,int len,int step,int threshold)
      if(up && brightness(c) < threshold)
      {
          path = new Path();
-         x = p%image.width;
+         x = p%image.width-image.width/2;
          y = p/image.width;
          path.addPoint(x,y);
          up = false;
      }
      else if(!up && brightness(c) > threshold)
      {
-         x = p%image.width;
+         x = p%image.width-image.width/2;
          y = p/image.width;
          path.addPoint(x,y);
          paths.add(path);          
@@ -661,6 +722,13 @@ ArrayList<Path> findPaths(PImage image,int start,int len,int step,int threshold)
      } 
      p+=step;  
         
+  }
+  if(!up)
+  {
+    x = p%image.width-image.width/2;
+    y = p/image.width;
+    path.addPoint(x,y);
+    paths.add(path); 
   }
   return paths;
 }
@@ -763,6 +831,8 @@ void  calculateSquarePixels(PImage image, int size)
   int sy = homeY;
   boolean reverse = true;
   int skipColor = getBrightness(image, 0, 0, size);
+  int skipHue = getHue(image,0,0,size);
+  int hue;
   
   for (int y = 0; y<height; y+=size)
   {
@@ -772,7 +842,9 @@ void  calculateSquarePixels(PImage image, int size)
       for (int x = 0; x<width; x+=size)
       {
         d = getBrightness(image, x, y, size);
-        if(d != skipColor)
+        hue = getHue(image,x,y,size);
+
+        if(hue != skipHue || d != skipColor)
         {
           shade = (d/range)*range;
           pixels.add(new PVector(sx+x, sy+y, shade)); 
@@ -781,10 +853,11 @@ void  calculateSquarePixels(PImage image, int size)
     }
     else
     {
-      for (int x = width-1; x>=0; x-=size)
+      for (int x = ((width-1)/size)*size; x>=0; x-=size)
       {
         d = getBrightness(image, x, y, size);
-        if(d!= skipColor)
+        hue = getHue(image,x,y,size);
+        if(hue!= skipHue || d != skipColor)
         {
           shade = (d/range)*range;
           pixels.add(new PVector(sx+x, sy+y, shade)); 
@@ -802,11 +875,13 @@ void plottingStarted()
 
 void plottingStopped()
 {
+  dindex = 0;
   plottingHatch = false;
   plottingImage = false;
   plottingDiamond = false;
   plottingSquare = false;
   plotDone();
   alpha = 255;
+  goHome();
 }
 

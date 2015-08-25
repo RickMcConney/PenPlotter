@@ -298,7 +298,6 @@ void controlEvent(ControlEvent theEvent) {
     }
     else if ((""+theEvent.getController()).indexOf("filterDropList") >=0)
     {
-      Map m = filterDropList.getItem((int)theEvent.getController().getValue());
       
       imageMode = (int)theEvent.getController().getValue();
       println("Image Mode = "+imageMode);
@@ -375,6 +374,7 @@ void load(ControlEvent theEvent)
     clearSvg();
     clearGcode();
     clearImage();
+    goHome();
     b.setCaptionLabel("Load");
     ((MyButton)b).setImg(loadImg);
   }
