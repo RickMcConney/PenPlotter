@@ -21,7 +21,7 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 final static String ICON  = "icons/penDown.png";
-final static String TITLE = "PenPlotter v0.4";
+final static String TITLE = "PenPlotter v0.5";
 
 ControlP5 cp5;
 Handle[] handles;
