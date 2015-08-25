@@ -386,8 +386,6 @@ void nextGcode()
       plotDone();
       sendPenUp();
       sendMoveG0(homeX,homeY);
-      currentX = homeX;
-      currentY = homeY;
       sendMotorOff();
 
 
@@ -459,8 +457,6 @@ void nextGcode()
         }
       }
 
-      currentX = x+offX+homeX;
-      currentY = y+offY+homeY;
       lastX = x;
       lastY = y;
       lastZ = z;

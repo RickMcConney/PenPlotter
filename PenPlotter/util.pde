@@ -34,6 +34,8 @@ void saveProperties() {
 			props.setProperty("image.cropRight",""+cropRight);
 			props.setProperty("image.cropTop",""+cropTop);
 			props.setProperty("image.cropBottom",""+cropBottom);
+                        props.setProperty("cnc.safeHeight",""+cncSafeHeight);
+
 
 
 			String fileToSave = sketchPath(propertiesFilename);
@@ -154,7 +156,7 @@ boolean gcodeFile(String filename)
 }
 boolean imageFile(String filename)
 {
-  if (filename.endsWith(".png") || filename.endsWith(".jpg") ||
+  if (filename.endsWith(".png") || filename.endsWith(".jpg") || filename.endsWith(".JPG") ||
     filename.endsWith(".gif") || filename.endsWith(".tga"))
     return true;
   return false;

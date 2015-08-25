@@ -21,7 +21,7 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 final static String ICON  = "icons/penDown.png";
-final static String TITLE = "PenPlotter v0.4";
+final static String TITLE = "PenPlotter v0.5";
 
 ControlP5 cp5;
 Handle[] handles;
@@ -95,6 +95,8 @@ color selectColor = color(0, 255, 0);
 color textColor = color(0, 0, 255);
 color motorOnColor = color(255, 0, 0);
 color motorOffColor = color(0, 0, 255);
+color drawColor = color(255,0,0);
+color rapidColor = color(0,255,0);
 
 
 private void prepareExitHandler () {
@@ -161,7 +163,9 @@ void setup() {
 
   svgDpi = Float.parseFloat(props.getProperty("svg.pixelsPerInch"));
   svgScale = 25.4f/svgDpi;
+ 
   currentFileName = props.getProperty("svg.name");
+  
   cncSafeHeight = Float.parseFloat(props.getProperty("cnc.safeHeight"));
 
 
@@ -446,13 +450,13 @@ void updatePos(float x, float y)
   currentY = y;
   handles[3].x = x;
   handles[3].y = y;
+  motorsOn = true;
 }
 
 void sline(float x1, float y1, float x2, float y2)
 {
   strokeWeight(0.5);
   line(scaleX(x1), scaleY(y1), scaleX(x2), scaleY(y2));
-  //updatePos(x2,y2);
 }
 
 void setZoom(float value)
@@ -485,15 +489,17 @@ void draw() {
 
     if (oimg != null)
     {
-      if(imageMode == PIXEL)
+      if(imageMode == DIAMOND)
       {
          drawDiamondPixels();
-         drawPlottedPixels();
       }
       else if(imageMode == HATCH)
       {
         drawHatch();
-        drawPlottedHatch();
+      }
+      else if(imageMode == SQUARE)
+      {
+        drawSquarePixels();
       }
       image(oimg, imageX, imageY, imageWidth, imageHeight);
       drawImageFrame();
@@ -513,12 +519,12 @@ void draw() {
   {
 
     moveDeltaX(jogX);
-    updatePos(currentX += jogX, currentY);
+
   }
   if (jogY != 0)
   {
     moveDeltaY(jogY);
-    updatePos(currentX, currentY += jogY);
+
   }
 }
 
