@@ -213,6 +213,8 @@ void plotImage()
     plotHatch();
   else if(imageMode == SQUARE)
     plotSquareImage();
+  else if(imageMode == STIPPLE)
+    plotStipples();
 }
 
 
@@ -628,6 +630,8 @@ void calculateImage()
     calculateHatch(simage);
   else if(imageMode == SQUARE)
     calculateSquarePixels(simage,pixelSize);  
+  else if(imageMode == STIPPLE)
+    calculateStippleImage(); 
 }
 
 public void  calculateHatch(PImage image)

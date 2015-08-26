@@ -20,6 +20,11 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Vector;
 
+import toxi.geom.*;
+import toxi.geom.mesh2d.*;
+import toxi.util.datatypes.*;
+import toxi.processing.*;
+
 final static String ICON  = "icons/penDown.png";
 final static String TITLE = "PenPlotter v0.5";
 
@@ -220,6 +225,7 @@ void setup() {
  
  makeHatchImage();
 
+ stippleSetup();
 } 
 
 void makeHatchImage()
@@ -513,12 +519,15 @@ void draw() {
       }
       else if(imageMode == HATCH)
       {
-
         drawHatch();
       }
       else if(imageMode == SQUARE)
       {
         drawSquarePixels();
+      }
+      else if(imageMode == STIPPLE)
+      {
+          stippleDraw();
       }
       image(oimg, imageX, imageY, imageWidth, imageHeight);
       drawImageFrame();
@@ -546,6 +555,8 @@ void draw() {
     moveDeltaY(jogY);
 
   }
+  
+
 }
 
 void drawMenu()

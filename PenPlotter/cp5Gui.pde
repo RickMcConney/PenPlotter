@@ -25,7 +25,7 @@ PImage plotImg;
 MyButton loadButton;
 MyButton plotButton;
 MyButton penUpButton;
-String[] filters = {"Hatch","Diamond","Square"};
+String[] filters = {"Hatch","Diamond","Square","Stipple"};
 
 class MyButton extends Button {
   public PImage img;
@@ -302,7 +302,14 @@ void controlEvent(ControlEvent theEvent) {
       imageMode = (int)theEvent.getController().getValue();
       println("Image Mode = "+imageMode);
       hideImageControls();
-      showImageControls();
+      hideStippleControls();
+      if(imageMode == STIPPLE)
+      {
+        filterDropList.setVisible(true);
+        showStippleControls();
+      }
+      else
+        showImageControls();
       calculateImage();
 
     }
@@ -402,6 +409,8 @@ void plot(ControlEvent theEvent)
 
       else if (plottingGcode)
         nextGcode();
+      else if (plottingStipple)
+        plotNextStipple();
       else
       {
         b.setCaptionLabel("Plot");
@@ -427,7 +436,7 @@ void plot(ControlEvent theEvent)
     else if (oimg != null)    
       plotImage();
       
-    if(plottingSvg || plottingImage || plottingGcode)
+    if(plottingSvg || plottingImage || plottingGcode || plottingStipple)
     {
        if(myPort == null) 
            b.setCaptionLabel("Step");

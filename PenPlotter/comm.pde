@@ -205,6 +205,8 @@ public void nextMsg()
       plotNextHatch();
     if (plottingGcode)
       nextGcode();
+        if (plottingStipple)
+      plotNextStipple();
   }
 }
 public void send(String msg)
