@@ -98,6 +98,7 @@ color motorOffColor = color(0, 0, 255);
 color drawColor = color(255,0,0);
 color rapidColor = color(0,255,0);
 
+int dirty = 0;
 
 private void prepareExitHandler () {
 
@@ -216,7 +217,18 @@ void setup() {
   handles[3] = new Handle("gondola", (int)currentX, (int)currentY, 0, 10, handles, true, true, 2);
   // handles[4] = new Handle("mmPerRev",0,0,0,10,handles,false,true,64);
   // handles[5] = new Handle("stepsPerRev",machineWidth,0,0,10,handles,false,true,64);
+ 
+ makeHatchImage();
+
 } 
+
+void makeHatchImage()
+{
+   hatchImage = createGraphics(machineWidth,machineHeight);
+   hatchImage.beginDraw();
+   hatchImage.clear();
+   hatchImage.endDraw();
+}
 
 void mouseReleased() { 
 
@@ -265,10 +277,13 @@ void handleMoved(String id, int x, int y)
     machineWidth = x;
     homeX = machineWidth/2;
     handles[2].x = homeX;
+    makeHatchImage();
+
   } else if (id.equals("mHeight"))
   {
     machineHeight = y;
     handles[1].y = y/2;
+    makeHatchImage();
   }
 }
 
@@ -469,6 +484,8 @@ void setZoom(float value)
 void draw() {
 
 
+      
+     
     background(backgroundColor);
 
     drawPage();
@@ -476,11 +493,12 @@ void draw() {
     drawOrigin();
     drawTicks();
     drawGondola(); 
+
     for (int i = 0; i < handles.length; i++) {
       handles[i].update();
       handles[i].display();
     }
-
+    
     if (sh != null)
     {
       drawSvg();
@@ -495,6 +513,7 @@ void draw() {
       }
       else if(imageMode == HATCH)
       {
+
         drawHatch();
       }
       else if(imageMode == SQUARE)
@@ -515,6 +534,7 @@ void draw() {
     // drawMenu();
 
 
+  
   if (jogX != 0)
   {
 

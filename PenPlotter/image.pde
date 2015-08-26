@@ -1,6 +1,7 @@
 ArrayList<PVector> pixels = new ArrayList<PVector>();
 ArrayList<PVector> raw = new ArrayList<PVector>();
 ArrayList<Path> hatchPaths;
+PGraphics hatchImage = null;
 int dindex = 0;
 
 PImage simage;
@@ -151,7 +152,10 @@ void cropImage(int x1, int y1, int x2, int y2)
     simage.copy(oimg, (x1-ox)*width/imageWidth, (y1-oy)*height/imageHeight, cropWidth, cropHeight, 0, 0, simage.width, simage.height);
     simage.loadPixels();
     if (simage != null)
+    {
+     // hatchImage = createGraphics(simage.width,simage.height);
       calculateImage();
+    }
   }
 }
 void setImageScale()
@@ -458,6 +462,7 @@ void plotNextHatch()
     alpha = 255;
     plottingHatch = false;
   }
+  drawHatchImage();
 }
 
 void exportHatch(File file)
@@ -523,10 +528,77 @@ void exportHatch(File file)
     }
   }
 }
-
- 
-
 void drawHatch()
+{
+  if(hatchImage != null)
+    image(hatchImage,scaleX(offX+homeX-simage.width/2),scaleY(offY+homeY),hatchImage.width*zoomScale, hatchImage.height*zoomScale);
+}
+void newdrawHatch()
+{
+  if(hatchPaths == null) return;
+  Path p;
+
+  strokeWeight(0.1);
+  
+  stroke(color(0, 0, 0, 255));  
+  beginShape(LINES);
+  for(int i =0;i<dindex;i++)
+  {
+        p = hatchPaths.get(i);
+        vertex(scaleX(p.first().x*userScale+homeX+offX), scaleY(p.first().y*userScale+homeY+offY));
+        vertex(scaleX(p.last().x*userScale+homeX+offX), scaleY(p.last().y*userScale+homeY+offY));
+  }
+  endShape();
+  
+  stroke(color(0, 0, 0, alpha));
+  beginShape(LINES);
+  for(int i = dindex;i<hatchPaths.size();i++)
+  {
+        p = hatchPaths.get(i);
+        vertex(scaleX(p.first().x*userScale+homeX+offX), scaleY(p.first().y*userScale+homeY+offY));
+        vertex(scaleX(p.last().x*userScale+homeX+offX), scaleY(p.last().y*userScale+homeY+offY));
+  }
+  endShape();
+}
+
+void drawHatchImage()
+{
+
+  if(hatchPaths == null) return;
+
+  Path p;
+
+  hatchImage.beginDraw();
+  hatchImage.clear();
+  hatchImage.strokeWeight(0.1);
+  
+   hatchImage.stroke(color(0, 0, 0, 255));  
+   hatchImage.beginShape(LINES);
+  for(int i =0;i<dindex;i++)
+  {
+        p = hatchPaths.get(i);
+         //hatchImage.vertex(scaleX(p.first().x*userScale+homeX), scaleY(p.first().y*userScale+homeY));
+        // hatchImage.vertex(scaleX(p.last().x*userScale+homeX), scaleY(p.last().y*userScale+homeY));
+    hatchImage.vertex(p.first().x*userScale, p.first().y*userScale);
+    hatchImage.vertex(p.last().x*userScale, p.last().y*userScale);
+       
+  }
+   hatchImage.endShape();
+  
+   hatchImage.stroke(color(0, 0, 0, alpha));
+   hatchImage.beginShape(LINES);
+  for(int i = dindex;i<hatchPaths.size();i++)
+  {
+        p = hatchPaths.get(i);
+         hatchImage.vertex(p.first().x*userScale, p.first().y*userScale);
+         hatchImage.vertex(p.last().x*userScale, p.last().y*userScale);
+  }
+   hatchImage.endShape();
+   hatchImage.endDraw();
+}
+
+
+void olddrawHatch()
 {
   if(hatchPaths == null) return;
   Path p;
@@ -563,7 +635,7 @@ public void  calculateHatch(PImage image)
   int size = pixelSize;
   hatchPaths = new  ArrayList<Path>();
   ArrayList<Path> paths = new  ArrayList<Path>();
-  Path path=null;
+
   int threshold;
 
   threshold = (int)t1Slider.getValue(); 
@@ -667,6 +739,7 @@ public void  calculateHatch(PImage image)
      reverse = addPaths(paths,reverse); 
   }
 
+  drawHatchImage();
 }
 
 boolean addPaths(ArrayList<Path> paths,boolean reverse)
@@ -707,14 +780,14 @@ ArrayList<Path> findPaths(PImage image,int start,int len,int step,int threshold)
      if(up && brightness(c) < threshold)
      {
          path = new Path();
-         x = p%image.width-image.width/2;
+         x = p%image.width;
          y = p/image.width;
          path.addPoint(x,y);
          up = false;
      }
      else if(!up && brightness(c) > threshold)
      {
-         x = p%image.width-image.width/2;
+         x = p%image.width;
          y = p/image.width;
          path.addPoint(x,y);
          paths.add(path);          
@@ -725,7 +798,7 @@ ArrayList<Path> findPaths(PImage image,int start,int len,int step,int threshold)
   }
   if(!up)
   {
-    x = p%image.width-image.width/2;
+    x = p%image.width;
     y = p/image.width;
     path.addPoint(x,y);
     paths.add(path); 
@@ -884,4 +957,3 @@ void plottingStopped()
   alpha = 255;
   goHome();
 }
-
