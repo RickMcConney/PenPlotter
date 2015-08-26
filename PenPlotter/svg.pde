@@ -261,35 +261,7 @@ RShape loadShapeFromFile(String filename) {
 }
 
 
-void exportGcode()
-{
-  SwingUtilities.invokeLater(new Runnable() 
-  {
-    public void run() {
-      JFileChooser fc = new JFileChooser();
-      if (currentFileName != null)
-      {
-        String name = currentFileName;
-        int dot = currentFileName.indexOf('.');
-        if (dot > 0)
-          name = currentFileName.substring(0, dot)+".gcode";
-        fc.setSelectedFile(new File(name));
-      }
-      fc.setDialogTitle("Export file...");
 
-      int returned = fc.showSaveDialog(frame);
-      if (returned == JFileChooser.APPROVE_OPTION) 
-      {
-        File file = fc.getSelectedFile();
-        if(sh != null)
-            exportSvg(file);
-        else if(hatchPaths != null)
-          exportHatch(file);
-      }
-    }
-  }
-  );
-}
 
 void totalPathLength()
 {

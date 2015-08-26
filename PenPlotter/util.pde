@@ -1,6 +1,38 @@
 SortedProperties props = null;
 public static String propertiesFilename = "default.properties.txt";
 
+void exportGcode()
+{
+  SwingUtilities.invokeLater(new Runnable() 
+  {
+    public void run() {
+      JFileChooser fc = new JFileChooser();
+      if (currentFileName != null)
+      {
+        String name = currentFileName;
+        int dot = currentFileName.indexOf('.');
+        if (dot > 0)
+          name = currentFileName.substring(0, dot)+".gcode";
+        fc.setSelectedFile(new File(name));
+      }
+      fc.setDialogTitle("Export file...");
+
+      int returned = fc.showSaveDialog(frame);
+      if (returned == JFileChooser.APPROVE_OPTION) 
+      {
+        File file = fc.getSelectedFile();
+        if(sh != null)
+            exportSvg(file);
+        else if(imageMode == HATCH)
+          exportHatch(file);
+        else if(imageMode == STIPPLE)
+          exportStipple(file);
+      }
+    }
+  }
+  );
+}
+
 void saveProperties() {
 
         if(props == null)
@@ -154,6 +186,7 @@ boolean gcodeFile(String filename)
     return true;
   return false;
 }
+
 boolean imageFile(String filename)
 {
   if (filename.endsWith(".png") || filename.endsWith(".jpg") || filename.endsWith(".JPG") ||
@@ -161,6 +194,7 @@ boolean imageFile(String filename)
     return true;
   return false;
 }
+
 class VectorFileFilter extends javax.swing.filechooser.FileFilter 
 {
   public boolean accept(File file) {

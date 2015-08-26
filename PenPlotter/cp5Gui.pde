@@ -522,8 +522,9 @@ void export()
 {
   if(sh != null)
     exportGcode();
-  else if(hatchPaths != null)
+  else if(imageMode == HATCH || imageMode == STIPPLE)
     exportGcode();
+   
 }
 
 void speedChanged(int speed)
