@@ -14,16 +14,12 @@ int cellBuffer = 100;  //Scale each cell to fit in a cellBuffer-sized square win
 int mainwidth; 
 int mainheight;
 int borderWidth;
-int ctrlheight;
-int TextColumnStart;
-
 
 
 float lowBorderX;
 float hiBorderX;
 float lowBorderY;
 float hiBorderY;
-
 
 
 float MaxDotSize;
@@ -267,37 +263,12 @@ void stippleSetup()
 
   borderWidth = 6;
 
-  mainwidth = 840;
-  mainheight = 650;
-  ctrlheight = 110;
-
- // size(mainwidth, mainheight + ctrlheight, JAVA2D);
+  mainwidth = 200;
+  mainheight = 200;
 
   gfx = new ToxiclibsSupport(this);
 
-
-  lowBorderX =  borderWidth; //mainwidth*0.01; 
-  hiBorderX = mainwidth - borderWidth; //mainwidth*0.98;
-  lowBorderY = borderWidth; // mainheight*0.01;
-  hiBorderY = mainheight - borderWidth;  //mainheight*0.98;
-
-  int innerWidth = mainwidth - 2  * borderWidth;
-  int innerHeight = mainheight - 2  * borderWidth;
-
-  clip=new SutherlandHodgemanClipper(new Rect(lowBorderX, lowBorderY, innerWidth, innerHeight));
-
   MainArraysetup();   // Main particle array setup
-
-    frameRate(24);
-
-  smooth();
-  noStroke();
-  fill(153); // Background fill color, for control section
-
-  textFont(createFont("SansSerif", 10));
-
-
-  //cp5 = new ControlP5(this);
 
   int leftcolumwidth = 225;
 
@@ -320,10 +291,8 @@ void stippleSetup()
 
   PauseButton = addMButton("Pause", "Pause",left,locY+=ySpace);
 
-  OrderOnOff = addMButton("ORDER_ON_OFF", "Show Paths",left,locY+=ySpace);
+  OrderOnOff = addMButton("ORDER_ON_OFF", "Hide Paths",left,locY+=ySpace);
 
-
-  TextColumnStart =  2 * leftcolumwidth + 100;
 
   MaxDotSize = MinDotSize * (1 + DotSizeFactor);
 
@@ -437,11 +406,11 @@ void SAVE_SVG(float theValue) {
 void ORDER_ON_OFF(float theValue) {  
   if (showPath) {
     showPath  = false;
-    OrderOnOff.setCaptionLabel("Hide Paths");
+    OrderOnOff.setCaptionLabel("Show Paths");
   }
   else {
     showPath  = true;
-    OrderOnOff.setCaptionLabel("Show Paths");
+    OrderOnOff.setCaptionLabel("Hide Paths");
   }
 } 
 
@@ -497,16 +466,6 @@ void Pause(float theValue) {
 } 
 
 
-boolean stippleOverRect(int x, int y, int width, int height) 
-{
-  if (mouseX >= x && mouseX <= x+width && 
-    mouseY >= y && mouseY <= y+height) {
-    return true;
-  } 
-  else {
-    return false;
-  }
-}
 
 void Stipples(int inValue) { 
 
@@ -955,6 +914,10 @@ void doPhysics()
       VoronoiCalculated = false; 
       Generation++;
       println("Generation = " + Generation );
+      if(Generation >=1)
+      {
+        Pause(0);
+      }
 
 
       frameTime = (millis() - millisLastFrame)/1000;
@@ -975,8 +938,8 @@ void exportStipple(File file)
    {
 
       Vec2D p1 = particles[particleRoute[i]];
-      float x1 = p1.x*userScale+offX;
-      float y1 =  p1.y*userScale+offY;
+      float x1 = p1.x-simage.width/2+offX;
+      float y1 =  p1.y+offY;
       if (i == 0)
       {
         writer.write("G21\n"); //mm
@@ -1031,9 +994,9 @@ void plotNextStipple()
   {
     Vec2D p1 = particles[particleRoute[dindex]];
     if(dindex == 0)
-      sendMoveG0(p1.x+offX,p1.y+offY);
+      sendMoveG0(p1.x+homeX-simage.width/2+offX,p1.y+homeY+offY);
     else
-      sendMoveG1(p1.x+offX,p1.y+offY);    
+      sendMoveG1(p1.x+homeX-simage.width/2+offX,p1.y+homeY+offY);    
     dindex++;
   }
   else
@@ -1042,6 +1005,31 @@ void plotNextStipple()
     alpha = 255;
     plottingStipple = false;
   }
+}
+
+void spiral(float x, float y,float size)
+{
+   float STEPS_PER_ROTATION = 25;
+   float increment = (float)(2*Math.PI/STEPS_PER_ROTATION);
+  
+  float lastX = x;
+  float lastY = y;
+  float nx;
+  float ny;
+  float theta = increment;
+
+  while( theta < size) {
+
+       nx = (float)(x + theta/4 * Math.cos(theta));
+       ny = (float)(y + theta/4 * Math.sin(theta));
+
+      line(scaleX(lastX), scaleY(lastY),scaleX(nx),scaleY(ny));
+      
+      theta = theta + increment;
+      lastX = nx; 
+      lastY = ny;   
+    }
+
 }
 
 void stippleDraw()
@@ -1076,7 +1064,7 @@ void stippleDraw()
 
       
         // Stroke color (blue)
-      strokeWeight (0.1);
+      strokeWeight (1);
 
       for ( i = 0; i < (particleRouteLength - 1); ++i) {
         if(i < dindex)
@@ -1086,7 +1074,7 @@ void stippleDraw()
         Vec2D p1 = particles[particleRoute[i]];
         Vec2D p2 = particles[particleRoute[i + 1]];
 
-        line(scaleX(p1.x+offX), scaleY(p1.y+offY), scaleX(p2.x+offX), scaleY(p2.y+offY));
+        line(scaleX(p1.x+homeX-simage.width/2+offX), scaleY(p1.y+homeY+offY), scaleX(p2.x+homeX-simage.width/2+offX), scaleY(p2.y+homeY+offY));
       }
     }
 
@@ -1108,8 +1096,11 @@ void stippleDraw()
       if (invertImg)
         v = 1 - v;
 
-      strokeWeight (MaxDotSize -  v * dotScale);  
-      point(scaleX(px+offX), scaleY(py+offY));
+      strokeWeight (zoomScale*(MaxDotSize -  v * dotScale));  
+      point(scaleX(px+homeX-simage.width/2+offX), scaleY(py+homeY+offY));
+     //  strokeWeight(0.1);
+     // spiral(px+homeX-simage.width/2+offX,py+homeY+offY,MaxDotSize -  v * dotScale);
+
     }
   }
   else
@@ -1138,7 +1129,10 @@ void stippleDraw()
         i = 0;
 
         pushMatrix();
-        translate(scaleX(homeX-simage.width/2),scaleY(homeY));
+        Vec2D offset = new Vec2D(scaleX(homeX-simage.width/2+offX),scaleY(homeY+offY));
+        Vec2D scale = new Vec2D(zoomScale,zoomScale);
+        gfx.translate(offset);
+        gfx.scale(scale);
         for (Polygon2D poly : voronoi.getRegions()) {
           //RegionList[i++] = poly; 
           gfx.polygon2D(clip.clipPolygon(poly));
@@ -1149,7 +1143,7 @@ void stippleDraw()
       if (showCells) {
         // Show "before and after" centroids, when polygons are shown.
 
-        strokeWeight (MinDotSize);  // Normal w/ Min & Max dot size
+        strokeWeight (zoomScale*MinDotSize);  // Normal w/ Min & Max dot size
         for ( i = 0; i < maxParticles; ++i) {
 
           int px = (int) particles[i].x;
@@ -1195,7 +1189,7 @@ void stippleDraw()
             v = 1 - v;
 
           if (v < cutoffScaled) { 
-            strokeWeight (MaxDotSize - v * dotScale);  
+            strokeWeight (zoomScale*(MaxDotSize - v * dotScale));  
             point(scaleX(px+homeX-simage.width/2+offX), scaleY(py+homeY+offY));
           }
         }
@@ -1205,39 +1199,6 @@ void stippleDraw()
     }
   }
 
-/*
-  noStroke();
-  fill(100);   // Background fill color
-  rect(0, mainheight, mainwidth, height); // Control area fill
-
-  // Underlay for hyperlink:
-  if (stippleOverRect(TextColumnStart - 10, mainheight + 35, 205, 20) )
-  {
-    fill(150); 
-    rect(TextColumnStart - 10, mainheight + 35, 205, 20);
-  }
-
-  fill(255);   // Text color
-
-  text("StippleGen 2      (v. 2.02)", TextColumnStart, mainheight + 15);
-  text("by Evil Mad Scientist Laboratories", TextColumnStart, mainheight + 30);
-  text("www.evilmadscientist.com/go/stipple2", TextColumnStart, mainheight + 50);
-
-  text("Generations completed: " + Generation, TextColumnStart, mainheight + 85); 
-  text("Time/Frame: " + frameTime + " s", TextColumnStart, mainheight + 100);
-
-
-  if (ErrorDisp)
-  {
-    fill(255, 0, 0);   // Text color
-    text(ErrorDisplay, TextColumnStart, mainheight + 70);
-    if ((millis() - ErrorTime) > 8000)
-      ErrorDisp = false;
-  }
-  else
-    text("Status: " + StatusDisplay, TextColumnStart, mainheight + 70);
-
-*/
 
   if (SaveNow > 0) {
 

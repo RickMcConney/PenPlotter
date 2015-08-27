@@ -452,9 +452,9 @@ void plotNextHatch()
   {
     Path  p = hatchPaths.get(dindex);
     sendPenUp();
-    sendMoveG0(p.first().x*userScale+homeX+offX,p.first().y*userScale+homeY+offY);
+    sendMoveG0(p.first().x+homeX-simage.width/2+offX,p.first().y+homeY+offY);
     sendPenDown();
-    sendMoveG1(p.last().x*userScale+homeX+offX,p.last().y*userScale+homeY+offY);
+    sendMoveG1(p.last().x+homeX-simage.width/2+offX,p.last().y+homeY+offY);
 
     dindex++;
   }
@@ -488,10 +488,10 @@ void exportHatch(File file)
       for (int j = 0; j<p.size ()-1; j++)
       {
 
-        float x1 = p.getPoint(j).x*userScale+offX;
-        float y1 =  p.getPoint(j).y*userScale+offY;
-        float x2 = p.getPoint(j+1).x*userScale+offX;
-        float y2 =  p.getPoint(j+1).y*userScale+offY;
+        float x1 = p.getPoint(j).x-simage.width/2+offX;
+        float y1 =  p.getPoint(j).y+offY;
+        float x2 = p.getPoint(j+1).x-simage.width/2+offX;
+        float y2 =  p.getPoint(j+1).y+offY;
 
 
         if (j == 0)
@@ -530,12 +530,12 @@ void exportHatch(File file)
     }
   }
 }
-void drawHatch()
+void imgdrawHatch()
 {
   if(hatchImage != null)
     image(hatchImage,scaleX(offX+homeX-simage.width/2),scaleY(offY+homeY),hatchImage.width*zoomScale, hatchImage.height*zoomScale);
 }
-void newdrawHatch()
+void drawHatch()
 {
   if(hatchPaths == null) return;
   Path p;
@@ -547,8 +547,8 @@ void newdrawHatch()
   for(int i =0;i<dindex;i++)
   {
         p = hatchPaths.get(i);
-        vertex(scaleX(p.first().x*userScale+homeX+offX), scaleY(p.first().y*userScale+homeY+offY));
-        vertex(scaleX(p.last().x*userScale+homeX+offX), scaleY(p.last().y*userScale+homeY+offY));
+        vertex(scaleX(p.first().x+homeX-simage.width/2+offX), scaleY(p.first().y+homeY+offY));
+        vertex(scaleX(p.last().x+homeX-simage.width/2+offX), scaleY(p.last().y+homeY+offY));
   }
   endShape();
   
@@ -557,8 +557,8 @@ void newdrawHatch()
   for(int i = dindex;i<hatchPaths.size();i++)
   {
         p = hatchPaths.get(i);
-        vertex(scaleX(p.first().x*userScale+homeX+offX), scaleY(p.first().y*userScale+homeY+offY));
-        vertex(scaleX(p.last().x*userScale+homeX+offX), scaleY(p.last().y*userScale+homeY+offY));
+        vertex(scaleX(p.first().x+homeX-simage.width/2+offX), scaleY(p.first().y+homeY+offY));
+        vertex(scaleX(p.last().x+homeX-simage.width/2+offX), scaleY(p.last().y+homeY+offY));
   }
   endShape();
 }
