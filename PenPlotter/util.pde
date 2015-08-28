@@ -155,6 +155,13 @@ SortedProperties props = null;
                                            int returned = fc.showOpenDialog(frame);
                                            if (returned == JFileChooser.APPROVE_OPTION)
                                            {
+                                               scaleSlider.setValue(1);
+                                               userScale = 1;
+                                               flipX = 1;
+                                               flipY = 1;
+                                               updateScale();
+                                               offX = 0;
+                                               offY = 0;
                                                File file = fc.getSelectedFile();
                                                if (file.getPath().endsWith(".svg"))
                                                {

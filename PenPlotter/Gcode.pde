@@ -14,11 +14,13 @@
     ArrayList<Path> gcodePaths;
     int gcodeIndex = 0;
     boolean plottingGcode = false;
+    boolean gcodeLoaded = false;
 
     public void clearGcode()
     {
         gcodeData = null;
         gcodePaths = null;
+        gcodeLoaded = false;
         resetGcode();
     }
 
@@ -30,6 +32,7 @@
 
     public void loadGcode(String fileName)
     {
+
         lastX = homeX;
         lastY = homeY;
         lastZ = 0;
@@ -44,10 +47,8 @@
             e.printStackTrace();
         }
         println("Loaded "+gcodePaths.size()+" Paths");
-        for (int i = 0; i<gcodePaths.size (); i++)
-        {
-            println("Path "+i+" len "+gcodePaths.get(i).size());
-        }
+
+        gcodeLoaded = true;
     }
 
     public static ArrayList<String> convertStreamToArray(InputStream is) throws Exception {

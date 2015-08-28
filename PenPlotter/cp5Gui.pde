@@ -132,7 +132,7 @@
 
         connectDropList = cp5.addDropdownList("dropListConnect")
                 .setPosition(leftMargin, posY)
-                .setCaptionLabel("Connect")
+                .setCaptionLabel("Disconnected")
                 .onEnter(toFront)
                 .onLeave(close)
                 .setBackgroundColor(color(115, 117, 216))
@@ -143,14 +143,14 @@
                 .setColorValue(color(0))
                 .setItemHeight(20)
                 .setBarHeight(20)
-                .setWidth(menuWidth)
+                .setSize(menuWidth,(comPorts.size()+1)*20)
                 .setOpen(false)
                 .addItems(comPorts)
         ;
 
         filterDropList = cp5.addDropdownList("filterDropList")
                 .setPosition(imageX+20, imageY+imageHeight+20)
-                .setCaptionLabel("Filter")
+                .setCaptionLabel("Hatch")
                 .onEnter(toFront)
                 .onLeave(close)
                 .setBackgroundColor(color(115, 117, 216))
@@ -161,7 +161,7 @@
                 .setColorValue(color(0))
                 .setItemHeight(20)
                 .setBarHeight(20)
-                .setWidth(menuWidth)
+                .setSize(menuWidth,20*5)
                 .setOpen(false)
                 .addItems(filters)
         ;
@@ -213,6 +213,8 @@
         addButton("save", "Save", leftMargin, posY+=ySpace);
         addButton("export", "Export",leftMargin, posY+=ySpace);
 
+        stippleSetup();
+        
         hideImageControls();
         showPenDown();
 
@@ -301,15 +303,8 @@
 
                 imageMode = (int)theEvent.getController().getValue();
                 println("Image Mode = "+imageMode);
-                hideImageControls();
-                hideStippleControls();
-                if(imageMode == STIPPLE)
-                {
-                    filterDropList.setVisible(true);
-                    showStippleControls();
-                }
-                else
-                    showImageControls();
+                hideImageControls();             
+                showImageControls();
                 calculateImage();
 
             }
@@ -318,6 +313,7 @@
 
     public void hideImageControls()
     {
+        hideStippleControls();
         filterDropList.setVisible(false);
         pixelSizeSlider.setVisible(false);
         t1Slider.setVisible(false);
@@ -331,9 +327,10 @@
     public void showImageControls()
     {
         filterDropList.setVisible(true);
-        pixelSizeSlider.setVisible(true);
+
         if(imageMode == HATCH)
         {
+            pixelSizeSlider.setVisible(true);
             t1Slider.setVisible(true);
             t2Slider.setVisible(true);
             t3Slider.setVisible(true);
@@ -341,11 +338,17 @@
         }
         else if(imageMode == DIAMOND)
         {
+            pixelSizeSlider.setVisible(true);
             penSlider.setVisible(true);
         }
         else if(imageMode == SQUARE)
         {
+            pixelSizeSlider.setVisible(true);
             penSlider.setVisible(true);
+        }
+        else if(imageMode == STIPPLE)
+        {
+             showStippleControls();
         }
 
     }
@@ -425,6 +428,7 @@
             resetSvg();
             resetImage();
             resetGcode();
+            resetStipple();
         }
         else
         {

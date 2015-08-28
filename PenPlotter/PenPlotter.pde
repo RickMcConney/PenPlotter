@@ -228,7 +228,7 @@ import java.io.IOException;
 
         makeHatchImage();
 
-        stippleSetup();
+
     }
 
     public void makeHatchImage()
@@ -521,7 +521,7 @@ import java.io.IOException;
             // drawMachineGrid(pixelSize);
         }
 
-        if (gcodeData != null)
+        if (gcodeLoaded)
         {
             drawPath();
         }

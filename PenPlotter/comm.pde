@@ -11,8 +11,7 @@
     {
         //  initialize your serial port and set the baud rate to 9600
 
-        comPorts.add("Connect");
-        comPorts.add("Disconnect");
+        comPorts.add("Disconnected");
 
         for (int i = 0; i<Serial.list().length; i++)
         {
@@ -33,6 +32,7 @@
         if (myPort != null)
             myPort.stop();
         myPort = null;
+
         //  myTextarea.setVisible(false);
     }
     public void connect(int port)
@@ -160,7 +160,7 @@
     public void sendSqPixel(float x,float y,int size,int b)
     {
         //todo 
-        send("M2 X"+x+" Y"+y+" P"+size+" S"+b+"\n");
+       // send("M2 X"+x+" Y"+y+" P"+size+" S"+b+"\n");
         updatePos(x,y);
     }
 

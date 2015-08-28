@@ -46,10 +46,8 @@
     int particleRouteLength;
     int RouteStep;
 
-    boolean showBG;
     boolean showPath;
     boolean showCells;
-    boolean invertImg;
 
     boolean FileModeTSP;
 
@@ -94,14 +92,10 @@
 
         img.loadPixels();
 
-        if (invertImg)
-            for (int i = 0; i < img.pixels.length; i++) {
-                img.pixels[i] = color(0);
-            }
-        else
-            for (int i = 0; i < img.pixels.length; i++) {
-                img.pixels[i] = color(255);
-            }
+
+        for (int i = 0; i < img.pixels.length; i++) {
+            img.pixels[i] = color(255);
+        }
 
         img.updatePixels();
 
@@ -125,14 +119,10 @@
 
         img.loadPixels();
 
-        if (invertImg)
-            for (int i = 0; i < img.pixels.length; i++) {
-                img.pixels[i] = color(0);
-            }
-        else
-            for (int i = 0; i < img.pixels.length; i++) {
-                img.pixels[i] = color(255);
-            }
+
+        for (int i = 0; i < img.pixels.length; i++) {
+            img.pixels[i] = color(255);
+        }
 
         img.updatePixels();
 
@@ -193,10 +183,6 @@
             // OK to use simple floor_ rounding here, because  this is a one-time operation,
             // creating the initial distribution that will be iterated.
 
-            if (invertImg)
-            {
-                p =  1 - p;
-            }
 
             if (random(1) >= p ) {
                 Vec2D p1 = new Vec2D(fx, fy);
@@ -276,16 +262,11 @@
 
         stipplesSlider = addSlider("Stipples","Stipples", 10, 10000, maxParticles, left,locY+=ySpace/2);
 
-        InvertOnOff = addMButton("INVERT_IMG","Black", left,locY+=ySpace);
-
         minDotSlider = addSlider("Min_Dot_Size","Min Dot Size", .5f, 8, MinDotSize, left,locY+=ySpace);
 
         dotRangeSlider = addSlider("Dot_Size_Range","Dot Size Range", 0, 20, DotSizeFactor, left, locY+=ySpace/2);
 
         whiteSlider = addSlider("White_Cutoff","White Cutoff", 0, 1, cutoff, left, locY+=ySpace/2);
-
-
-        CellOnOff = addMButton("CELLS_ON_OFF", "Hide Cells", left, locY+=ySpace);
 
         PauseButton = addMButton("Pause", "Pause",left,locY+=ySpace);
 
@@ -296,10 +277,8 @@
 
         ReInitiallizeArray = false;
         pausemode = false;
-        showBG  = false;
-        invertImg  = false;
         showPath = true;
-        showCells = false;
+        showCells = true;
         fileLoaded = false;
         SaveNow = 0;
         hideStippleControls();
@@ -308,11 +287,9 @@
     public void showStippleControls()
     {
         stipplesSlider.setVisible(true);
-        InvertOnOff.setVisible(true);
         minDotSlider.setVisible(true);
         dotRangeSlider.setVisible(true);
         whiteSlider.setVisible(true);
-        CellOnOff.setVisible(true);
         PauseButton.setVisible(true);
         OrderOnOff.setVisible(true);
 
@@ -320,13 +297,11 @@
 
     public void hideStippleControls()
     {
-
+        
         stipplesSlider.setVisible(false);
-        InvertOnOff.setVisible(false);
         minDotSlider.setVisible(false);
         dotRangeSlider.setVisible(false);
         whiteSlider.setVisible(false);
-        CellOnOff.setVisible(false);
         PauseButton.setVisible(false);
         OrderOnOff.setVisible(false);
 
@@ -411,38 +386,6 @@
             OrderOnOff.setCaptionLabel("Hide Paths");
         }
     }
-
-    public void CELLS_ON_OFF() {
-        if (showCells) {
-            showCells  = false;
-            CellOnOff.setCaptionLabel("Hide Cells");
-        }
-        else {
-            showCells  = true;
-            CellOnOff.setCaptionLabel("Show Cells");
-        }
-    }
-
-
-
-
-    public void INVERT_IMG() {
-        if (invertImg) {
-            invertImg  = false;
-            InvertOnOff.setCaptionLabel("Black");
-            cp5.getController("White_Cutoff").setCaptionLabel("White Cutoff");
-        }
-        else {
-            invertImg  = true;
-            InvertOnOff.setCaptionLabel("White");
-            cp5.getController("White_Cutoff").setCaptionLabel("Black Cutoff");
-        }
-
-        ReInitiallizeArray = true;
-        pausemode =  false;
-    }
-
-
 
 
     public void Pause() {
@@ -529,10 +472,6 @@
                     continue;
 
                 float v = (brightness(imgblur.pixels[ py*imgblur.width + px ]))/255;
-
-                if (invertImg)
-                    v = 1 - v;
-
 
                 if (v < cutoffScaled) {
                     particleRouteTemp[i] = true;
@@ -802,39 +741,23 @@
                 float PicDensity;
 
 
-                if (invertImg)
-                    for (float x=xMin; x<=xMax; x += StepSize) {
-                        for (float y=yMin; y<=yMax; y += StepSize) {
 
-                            Vec2D p0 = new Vec2D(x, y);
-                            if (region.containsPoint(p0)) {
+                for (float x=xMin; x<=xMax; x += StepSize) {
+                    for (float y=yMin; y<=yMax; y += StepSize) {
 
-                                // Thanks to polygon clipping, NO vertices will be beyond the sides of imgblur.  
-                                PicDensity = 0.001f + (brightness(imgblur.pixels[ round(y)*imgblur.width + round(x) ]));
+                        Vec2D p0 = new Vec2D(x, y);
+                        if (region.containsPoint(p0)) {
 
-                                xSum += PicDensity * x;
-                                ySum += PicDensity * y;
-                                dSum += PicDensity;
-                            }
+                            // Thanks to polygon clipping, NO vertices will be beyond the sides of imgblur. 
+                            PicDensity = 255.001f - (brightness(imgblur.pixels[ round(y)*imgblur.width + round(x) ]));
+
+
+                            xSum += PicDensity * x;
+                            ySum += PicDensity * y;
+                            dSum += PicDensity;
                         }
                     }
-                else
-                    for (float x=xMin; x<=xMax; x += StepSize) {
-                        for (float y=yMin; y<=yMax; y += StepSize) {
-
-                            Vec2D p0 = new Vec2D(x, y);
-                            if (region.containsPoint(p0)) {
-
-                                // Thanks to polygon clipping, NO vertices will be beyond the sides of imgblur. 
-                                PicDensity = 255.001f - (brightness(imgblur.pixels[ round(y)*imgblur.width + round(x) ]));
-
-
-                                xSum += PicDensity * x;
-                                ySum += PicDensity * y;
-                                dSum += PicDensity;
-                            }
-                        }
-                    }
+                }
 
                 if (dSum > 0)
                 {
@@ -883,11 +806,6 @@
                 VoronoiCalculated = false;
                 Generation++;
                 println("Generation = " + Generation );
-                if(Generation >=1)
-                {
-                    Pause();
-                }
-
 
                 frameTime = (millis() - millisLastFrame)/1000;
                 millisLastFrame = millis();
@@ -903,29 +821,41 @@
         try {
             writer = new BufferedWriter( new FileWriter( file));
 
-            for(int i =0;i<hatchPaths.size();i++)
+        for(int r = 0;r< particleRoute.length;r++)
+        {
+            if (r == 0)
             {
-
-                Vec2D p1 = particles[particleRoute[i]];
-                float x1 = p1.x-simage.width/2+offX;
-                float y1 =  p1.y+offY;
-                if (i == 0)
-                {
-                    writer.write("G21\n"); //mm
-                    writer.write("G90\n"); // absolute
-                    writer.write("G0 F"+speedValue+"\n");
-
-                    // pen up
-                    writer.write("G0 Z"+cncSafeHeight+"\n");
-                    writer.write("G0 X"+nf(x1, 0, 3) +" Y"+nf(y1, 0, 3)+"\n");
+                writer.write("G21\n"); //mm
+                writer.write("G90\n"); // absolute
+                writer.write("G0 F"+speedValue+"\n");  
+            }       
+            Vec2D p1 = particles[particleRoute[r]];
+            Path p = dotPath((int)p1.x,(int)p1.y);
+            for(int i = 0;i<p.size();i++)
+            {
+                 float x1 = p.getPoint(i).x-homeX;
+                 float y1 = p.getPoint(i).y-homeY;
+                 if(i == 0)
+                 {
+                   if(!showPath || r == 0)
+                   {
+                     writer.write("G0 Z"+cncSafeHeight+"\n");
+                     writer.write("G0 X"+nf(x1, 0, 3) +" Y"+nf(y1, 0, 3)+"\n");
+                   }
+                   else
+                   {
+                     writer.write("G0 Z0\n");
+                     writer.write("G1 X"+nf(x1, 0, 3) +" Y"+nf(y1, 0, 3)+"\n");
+                   }
+                 }
+                 else
+                 {
                     //pen Down
-                    writer.write("G0 Z0\n");
-                }
-
-                writer.write("G1 X"+nf(x1, 0, 3) +" Y"+nf(y1, 0, 3)+"\n");
-
+                   writer.write("G0 Z0\n");
+                   writer.write("G1 X"+nf(x1, 0, 3) +" Y"+nf(y1, 0, 3)+"\n");
+                 }
             }
-
+        }
 
             float x1 = 0;
             float y1 = 0;
@@ -949,6 +879,13 @@
             }
         }
     }
+    
+    void resetStipple()
+    {
+      dindex = 0;
+      plottingStipple = false;
+      plotDone();
+    }
     public void plotStipples()
     {
         dindex = 0;
@@ -956,16 +893,68 @@
         plottingStarted();
         plotNextStipple();
     }
+    
+    Path dotPath(int x,int y)
+    {
+       float dotScale = (MaxDotSize - MinDotSize);
+       float v = (brightness(imgblur.pixels[ y*imgblur.width + x ]))/255;
+       float dotSize = MaxDotSize -  v * dotScale;
+       Path p = new Path();
+       x+=homeX-simage.width/2+offX;
+       y+=homeY+offY;
+
+       float w = dotSize/8;
+       for(int i = 0;i<4;i++)
+       {
+         p.addPoint(x-dotSize/2+i*w,y-dotSize/2+i*w);
+         p.addPoint(x+dotSize/2-i*w,y-dotSize/2+i*w);
+         p.addPoint(x+dotSize/2-i*w,y+dotSize/2-i*w);
+         p.addPoint(x-dotSize/2+i*w,y+dotSize/2-i*w);
+         p.addPoint(x-dotSize/2+i*w,y-dotSize/2+i*w);
+       }
+       return p; 
+    }
+    
+    void drawDot(int x,int y)
+    {
+      float dotScale = (MaxDotSize - MinDotSize);
+       float v = (brightness(imgblur.pixels[ y*imgblur.width + x ]))/255;
+       float dotSize = MaxDotSize -  v * dotScale;
+       float w = dotSize/8;
+       for(int i = 0;i<4;i++)
+       {
+           rect(scaleX(x-dotSize/2+homeX-simage.width/2+offX+i*w),scaleY(y-dotSize/2+homeY+offY+i*w),zoomScale*(dotSize-(i*w*2)),zoomScale*(dotSize-(i*w*2)));
+       }
+    }
 
     public void plotNextStipple()
     {
         if(dindex < particleRoute.length)
         {
+           
             Vec2D p1 = particles[particleRoute[dindex]];
-            if(dindex == 0)
-                sendMoveG0(p1.x+homeX-simage.width/2+offX,p1.y+homeY+offY);
-            else
-                sendMoveG1(p1.x+homeX-simage.width/2+offX,p1.y+homeY+offY);
+            Path p = dotPath((int)p1.x,(int)p1.y);
+            for(int i = 0;i<p.size();i++)
+            {
+              if(i == 0)
+              {
+                if(!showPath || dindex == 0)
+                {
+                  sendPenUp();
+                  sendMoveG0(p.getPoint(i).x,p.getPoint(i).y);
+                  sendPenDown();
+                }
+                else
+                {
+                  sendMoveG1(p.getPoint(i).x,p.getPoint(i).y);
+                }
+              }
+              else
+              {
+                
+                sendMoveG1(p.getPoint(i).x,p.getPoint(i).y);
+              }
+            }
             dindex++;
         }
         else
@@ -1044,11 +1033,7 @@
                 }
             }
 
-
-            if (invertImg)
-                stroke(255);
-            else
-                stroke(0);
+            stroke(0);
 
             for ( i = 0; i < particleRouteLength; ++i) {
                 // Only show "routed" particles-- those above the white cutoff.
@@ -1059,11 +1044,10 @@
 
                 float v = (brightness(imgblur.pixels[ py*imgblur.width + px ]))/255;
 
-                if (invertImg)
-                    v = 1 - v;
-
-                strokeWeight (zoomScale*(MaxDotSize -  v * dotScale));
-                point(scaleX(px+homeX-simage.width/2+offX), scaleY(py+homeY+offY));
+               // strokeWeight (zoomScale*(MaxDotSize -  v * dotScale));
+               // point(scaleX(px+homeX-simage.width/2+offX), scaleY(py+homeY+offY));
+                strokeWeight(1);
+                drawDot(px,py);
                 //  strokeWeight(0.1);
                 // spiral(px+homeX-simage.width/2+offX,py+homeY+offY,MaxDotSize -  v * dotScale);
 
@@ -1078,15 +1062,7 @@
                     strokeWeight(1);
                     noFill();
 
-
-                    if (invertImg && (!showBG))  // TODO -- if invertImg AND NOT background
-                        stroke(100);
-                    else
-                        stroke(200);
-
-                    //        stroke(200);
-
-
+                    stroke(200);
 
                     pushMatrix();
                     Vec2D offset = new Vec2D(scaleX(homeX-simage.width/2+offX),scaleY(homeY+offY));
@@ -1094,7 +1070,6 @@
                     gfx.translate(offset);
                     gfx.scale(scale);
                     for (Polygon2D poly : voronoi.getRegions()) {
-                        //RegionList[i++] = poly; 
                         gfx.polygon2D(clip.clipPolygon(poly));
                     }
                     popMatrix();
@@ -1120,10 +1095,7 @@
             else {
                 // Stipple calculation is still underway
 
-                if (invertImg)
-                    stroke(255);
-                else
-                    stroke(0);
+                stroke(0);
 
                 for ( i = 0; i < cellsCalculated; ++i) {
 
@@ -1134,9 +1106,6 @@
                         continue;
                     {
                         float v = (brightness(imgblur.pixels[ py*imgblur.width + px ]))/255;
-
-                        if (invertImg)
-                            v = 1 - v;
 
                         if (v < cutoffScaled) {
                             strokeWeight (zoomScale*(MaxDotSize - v * dotScale));
@@ -1198,9 +1167,6 @@
                     int py = floor(p1.y);
 
                     float v = (brightness(imgblur.pixels[ py*imgblur.width + px ]))/255;
-
-                    if (invertImg)
-                        v = 1 - v;
 
                     float dotrad =  (MaxDotSize - v * dotScale)/2;
 
