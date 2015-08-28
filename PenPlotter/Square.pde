@@ -226,14 +226,41 @@
         }
     }
 
-    public void draw() {
-        for (int i = 0; i < pixels.size(); i++) {
-            if (i < dindex)
-                drawSquarePixel(i, 255);
-            else
-                drawSquarePixel(i, alpha);
+    public Path wavePath(float x,float y,float  shade)
+        {
+            Path path = new Path();
+            path.addPoint(x , y);
+            float n  = ((255-shade) * pixelSize / penWidth) / 255;
+            float inc = pixelSize/n;
+            for(float i = 0;i<n;i++) {
+
+                path.addPoint(x + i * inc, y+pixelSize);
+                path.addPoint(x + (i+1) * inc, y+pixelSize);
+                path.addPoint(x + (i+1) * inc, y);
+            }
+            return path;
         }
-    }
+
+        public void drawWavePixel(int i, int a) {
+            if (i < pixels.size()) {
+                PVector r = pixels.get(i);
+                Path p = wavePath(r.x,r.y,r.z);
+                stroke(color(0,0,0, a));
+                for(int j = 0;j<p.size()-1;j++)
+                {
+                    sline(p.getPoint(j).x,p.getPoint(j).y,p.getPoint(j+1).x,p.getPoint(j+1).y);
+                }
+            }
+        }
+
+        public void draw() {
+            for (int i = 0; i < pixels.size(); i++) {
+                if (i < dindex)
+                    drawWavePixel(i, 255);
+                else
+                    drawWavePixel(i, alpha);
+            }
+        }
 
 
     public void calculate() {
