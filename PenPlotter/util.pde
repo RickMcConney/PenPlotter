@@ -1,5 +1,5 @@
 SortedProperties props = null;
-    public static String propertiesFilename = "default.properties.txt";
+     String propertiesFilename = "default.properties.txt";
 
     public void exportGcode()
     {
@@ -21,12 +21,7 @@ SortedProperties props = null;
                                            if (returned == JFileChooser.APPROVE_OPTION)
                                            {
                                                File file = fc.getSelectedFile();
-                                               if(sh != null)
-                                                   exportSvg(file);
-                                               else if(imageMode == HATCH)
-                                                   exportHatch(file);
-                                               else if(imageMode == STIPPLE)
-                                                   exportStipple(file);
+                                               currentPlot.export(file);
                                            }
                                        }
                                    }
@@ -38,48 +33,45 @@ SortedProperties props = null;
         if(props == null)
             props = new SortedProperties();
 
-            try {
-                props.setProperty("machine.motors.maxSpeed",""+speedValue);
-                props.setProperty("machine.width",""+machineWidth);
-                props.setProperty("machine.height",""+machineHeight);
-                props.setProperty("machine.homepoint.y",""+homeY);
-                props.setProperty("machine.motors.mmPerRev",""+mmPerRev);
-                props.setProperty("machine.motors.stepsPerRev",""+stepsPerRev);
+        try {
+            props.setProperty("machine.motors.maxSpeed",""+speedValue);
+            props.setProperty("machine.width",""+machineWidth);
+            props.setProperty("machine.height",""+machineHeight);
+            props.setProperty("machine.homepoint.y",""+homeY);
+            props.setProperty("machine.motors.mmPerRev",""+mmPerRev);
+            props.setProperty("machine.motors.stepsPerRev",""+stepsPerRev);
 
-                props.setProperty("machine.penSize",""+penWidth );
-                props.setProperty("svg.pixelsPerInch",""+svgDpi);
-                props.setProperty("svg.name",currentFileName);
-                props.setProperty("svg.UserScale",""+userScale);
-                props.setProperty("svg.shortestSegment",""+shortestSegment);
+            props.setProperty("machine.penSize",""+penWidth );
+            props.setProperty("svg.pixelsPerInch",""+svgDpi);
+            props.setProperty("svg.name",currentFileName);
+            props.setProperty("svg.UserScale",""+userScale);
+            props.setProperty("svg.shortestSegment",""+shortestSegment);
 
-                props.setProperty("image.pixelSize",""+pixelSize);
+            props.setProperty("image.pixelSize",""+pixelSize);
 
-                props.setProperty("com.baudrate",""+baudRate);
-                props.setProperty("com.serialPort",""+lastPort);
+            props.setProperty("com.baudrate",""+com.baudRate);
+            props.setProperty("com.serialPort",""+com.lastPort);
 
-                props.setProperty("machine.offX",""+offX);
-                props.setProperty("machine.offY",""+offY);
-                props.setProperty("machine.zoomScale",""+zoomScale);
+            props.setProperty("machine.offX",""+offX);
+            props.setProperty("machine.offY",""+offY);
+            props.setProperty("machine.zoomScale",""+zoomScale);
 
-                props.setProperty("image.cropLeft",""+cropLeft);
-                props.setProperty("image.cropRight",""+cropRight);
-                props.setProperty("image.cropTop",""+cropTop);
-                props.setProperty("image.cropBottom",""+cropBottom);
-                props.setProperty("cnc.safeHeight",""+cncSafeHeight);
+            props.setProperty("image.cropLeft",""+cropLeft);
+            props.setProperty("image.cropRight",""+cropRight);
+            props.setProperty("image.cropTop",""+cropTop);
+            props.setProperty("image.cropBottom",""+cropBottom);
+            props.setProperty("cnc.safeHeight",""+cncSafeHeight);
 
-
-
-                String fileToSave = sketchPath(propertiesFilename);
-                File f = new File(fileToSave);
-                OutputStream out = new FileOutputStream( f );
-                props.store(out, "Polar Properties");
-                out.close();
-                println("Saved Properties "+propertiesFilename);
-            }
-            catch (Exception e ) {
-                e.printStackTrace();
-            }
-
+            String fileToSave = sketchPath(propertiesFilename);
+            File f = new File(fileToSave);
+            OutputStream out = new FileOutputStream( f );
+            props.store(out, "Polar Properties");
+            out.close();
+            println("Saved Properties "+propertiesFilename);
+        }
+        catch (Exception e ) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -142,7 +134,6 @@ SortedProperties props = null;
 
     public void loadVectorFile()
     {
-
         SwingUtilities.invokeLater(new Runnable()
                                    {
                                        public void run() {
@@ -165,17 +156,25 @@ SortedProperties props = null;
                                                File file = fc.getSelectedFile();
                                                if (file.getPath().endsWith(".svg"))
                                                {
-                                                   sh = loadShapeFromFile(file.getPath());
+                                                   currentPlot = new SvgPlot();
                                                }
                                                else if (gcodeFile(file.getPath()))
                                                {
-                                                   loadGcode(file.getPath());
+                                                   currentPlot = new GcodePlot();
                                                }
                                                else if (imageFile(file.getPath()))
                                                {
-                                                   loadImageFile(file.getPath());
-                                                   showImageControls();
+                                                   if(imageMode == HATCH)
+                                                       currentPlot = hatchPlot;
+                                                   else if(imageMode == DIAMOND)
+                                                       currentPlot = diamondPlot;
+                                                   else if(imageMode == SQUARE)
+                                                       currentPlot = squarePlot;
+                                                   else
+                                                       currentPlot = stipplePlot;
                                                }
+                                               currentPlot.load(file.getPath());
+                                               currentPlot.showControls();
                                                currentFileName = file.getPath();
                                                fileLoaded();
                                            }
@@ -207,4 +206,20 @@ SortedProperties props = null;
         public String getDescription() {
             return "Plote files (SVG, GCode, Image)";
         }
+    }
+
+    public float getCartesianX(float aPos, float bPos) {
+        return (machineWidth * machineWidth - bPos * bPos + aPos * aPos) / (machineWidth * 2);
+    }
+
+    public float getCartesianY(float cX, float aPos) {
+        return sqrt(aPos * aPos - cX * cX);
+    }
+
+    public float getMachineA(float cX, float cY) {
+        return sqrt(cX * cX + cY * cY);
+    }
+
+    public float getMachineB(float cX, float cY) {
+        return sqrt(sq((machineWidth - cX)) + cY * cY);
     }

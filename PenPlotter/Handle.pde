@@ -1,4 +1,4 @@
-    class Handle {
+ class Handle {
 
         String id;
         float x, y;
@@ -66,6 +66,11 @@
             }
         }
 
+        public boolean overRect(int x, int y, int width, int height) {
+            return mouseX >= x && mouseX <= x + width &&
+                    mouseY >= y && mouseY <= y + height;
+        }
+
         public void overEvent() {
             over = overRect(boxx, boxy, size, size);
         }
@@ -105,9 +110,4 @@
                     text("Y "+(int)y, boxx+offx, boxy-10);
             }
         }
-    }
-
-    public boolean overRect(int x, int y, int width, int height) {
-        return mouseX >= x && mouseX <= x + width &&
-                mouseY >= y && mouseY <= y + height;
     }

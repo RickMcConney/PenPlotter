@@ -1,10 +1,9 @@
-    DropdownList connectDropList;
+ DropdownList connectDropList;
     DropdownList filterDropList;
     Textlabel myTextarea;
     int leftMargin = 10;
     int posY = 10;
     int ySpace = 36;
-    int rotation = 0;
 
     Slider pixelSizeSlider;
     Slider speedSlider;
@@ -96,7 +95,7 @@
             theApplet.rect(0, 0, theButton.getWidth(), theButton.getHeight(), 8);
 
 
-            // center the caption label 
+            // center the caption label
             int x = theButton.getWidth()/2 - theButton.getCaptionLabel().getWidth()/2-10;
             int y = theButton.getHeight()/2 - theButton.getCaptionLabel().getHeight()/2;
 
@@ -143,9 +142,9 @@
                 .setColorValue(color(0))
                 .setItemHeight(20)
                 .setBarHeight(20)
-                .setSize(menuWidth,(comPorts.size()+1)*20)
+                .setSize(menuWidth,(com.comPorts.size()+1)*20)
                 .setOpen(false)
-                .addItems(comPorts)
+                .addItems(com.comPorts)
         ;
 
         filterDropList = cp5.addDropdownList("filterDropList")
@@ -161,7 +160,7 @@
                 .setColorValue(color(0))
                 .setItemHeight(20)
                 .setBarHeight(20)
-                .setSize(menuWidth,20*5)
+                .setSize(menuWidth, 20 * 5)
                 .setOpen(false)
                 .addItems(filters)
         ;
@@ -176,7 +175,7 @@
                 .setColorForeground(textColor)
         ;
 
-        addButton("setHome", "Set Home", leftMargin, posY+=ySpace/2);
+        addButton("setHome", "Set Home", leftMargin, posY += ySpace / 2);
         addButton("up", "", leftMargin+36, posY+=ySpace+4).onPress(press).onRelease(release).setSize(30, 24);
         addButton("left", "", leftMargin+16, posY+=30).onPress(press).onRelease(release).setSize(30, 24);
         addButton("right", "", leftMargin+56, posY).onPress(press).onRelease(release).setSize(30, 24);
@@ -213,10 +212,25 @@
         addButton("save", "Save", leftMargin, posY+=ySpace);
         addButton("export", "Export",leftMargin, posY+=ySpace);
 
-        stippleSetup();
-        
+        stipplePlot.init();
+
         hideImageControls();
         showPenDown();
+
+    }
+
+    public void hideImageControls()
+    {
+
+        filterDropList.setVisible(false);
+        pixelSizeSlider.setVisible(false);
+        t1Slider.setVisible(false);
+        t2Slider.setVisible(false);
+        t3Slider.setVisible(false);
+        t4Slider.setVisible(false);
+        penSlider.setVisible(false);
+
+        stipplePlot.hideControls();
 
     }
 
@@ -269,7 +283,7 @@
 
     CallbackListener thresholdrelease = new CallbackListener() {
         public void controlEvent(CallbackEvent theEvent) {
-            calculateImage();
+            currentPlot.calculate();
         }
     };
 
@@ -280,83 +294,44 @@
     };
 
     public void controlEvent(ControlEvent theEvent) {
-        // DropdownList is of type ControlGroup.
-        // A controlEvent will be triggered from inside the ControlGroup class.
-        // therefore you need to check the originator of the Event with
-        // if (theEvent.isGroup())
-        // to avoid an error message thrown by controlP5.
 
-        if (theEvent.isGroup()) {
-            // check if the Event was triggered from a ControlGroup
-            //println("event from group : "+theEvent.getGroup().getValue()+" from "+theEvent.getGroup());
-        } else if (theEvent.isController()) {
+       if (theEvent.isController()) {
             //println("event from controller : "+theEvent.getController().getValue()+" from "+theEvent.getController());
 
             if (("" + theEvent.getController()).contains("dropListConnect"))
             {
                 Map m = connectDropList.getItem((int)theEvent.getController().getValue());
                 println(m.get("name"));
-                connect((String)m.get("name"));
+                com.connect((String) m.get("name"));
             }
             else if (("" + theEvent.getController()).contains("filterDropList"))
             {
-
                 imageMode = (int)theEvent.getController().getValue();
-                println("Image Mode = "+imageMode);
-                hideImageControls();             
-                showImageControls();
-                calculateImage();
+                println("Image Mode = " + imageMode);
 
+                if(imageMode == DIAMOND)
+                    currentPlot = diamondPlot;
+                else if(imageMode == HATCH)
+                    currentPlot = hatchPlot;
+                else if(imageMode == SQUARE)
+                    currentPlot = squarePlot;
+                else if(imageMode == STIPPLE)
+                {
+                    currentPlot = stipplePlot;
+                    currentPlot.load();
+                }
+
+                hideImageControls();
+                currentPlot.showControls();
+                currentPlot.calculate();
             }
         }
     }
 
-    public void hideImageControls()
-    {
-        hideStippleControls();
-        filterDropList.setVisible(false);
-        pixelSizeSlider.setVisible(false);
-        t1Slider.setVisible(false);
-        t2Slider.setVisible(false);
-        t3Slider.setVisible(false);
-        t4Slider.setVisible(false);
-        penSlider.setVisible(false);
-
-    }
-
-    public void showImageControls()
-    {
-        filterDropList.setVisible(true);
-
-        if(imageMode == HATCH)
-        {
-            pixelSizeSlider.setVisible(true);
-            t1Slider.setVisible(true);
-            t2Slider.setVisible(true);
-            t3Slider.setVisible(true);
-            t4Slider.setVisible(true);
-        }
-        else if(imageMode == DIAMOND)
-        {
-            pixelSizeSlider.setVisible(true);
-            penSlider.setVisible(true);
-        }
-        else if(imageMode == SQUARE)
-        {
-            pixelSizeSlider.setVisible(true);
-            penSlider.setVisible(true);
-        }
-        else if(imageMode == STIPPLE)
-        {
-             showStippleControls();
-        }
-
-    }
 
     public void setHome()
     {
-        sendHome();
-
+        com.sendHome();
     }
 
     public void plotDone()
@@ -365,25 +340,23 @@
         plotButton.setImg(plotImg);
     }
 
-    public void fileLoaded()
-    {
+    public void fileLoaded() {
         loadButton.setCaptionLabel("Clear");
         loadButton.setImg(clearImg);
     }
+
     public void load(ControlEvent theEvent)
     {
         Button b = (Button) theEvent.getController();
 
         if (b.getCaptionLabel().getText().startsWith("Load"))
         {
-
             loadVectorFile();
         } else
         {
             hideImageControls();
-            clearSvg();
-            clearGcode();
-            clearImage();
+            currentPlot.clear();
+
             goHome();
             b.setCaptionLabel("Load");
             ((MyButton)b).setImg(loadImg);
@@ -393,27 +366,10 @@
     public void plot(ControlEvent theEvent)
     {
         Button b = (Button) theEvent.getController();
-        if (b.getCaptionLabel().getText().contains("Step"))
-        {
-            if (plottingSvg)
-            {
-                int index = svgPathIndex;
-                while(index == svgPathIndex)
-                    plotLine();
+        if (b.getCaptionLabel().getText().contains("Step")) {
 
-            }
-            else if (plottingDiamond)
-                plotNextDiamondPixel();
-            else if (plottingSquare)
-                plotNextSquarePixel();
-
-            else if (plottingHatch)
-                plotNextHatch();
-
-            else if (plottingGcode)
-                nextGcode();
-            else if (plottingStipple)
-                plotNextStipple();
+            if (currentPlot.isPlotting())
+                currentPlot.nextPlot();
             else
             {
                 b.setCaptionLabel("Plot");
@@ -424,25 +380,16 @@
         {
             b.setCaptionLabel("Plot");
             ((MyButton)b).setImg(plotImg);
-            // oksend("M112\n");
-            resetSvg();
-            resetImage();
-            resetGcode();
-            resetStipple();
+            currentPlot.reset();
         }
         else
         {
+            if (currentPlot.isLoaded())
+                currentPlot.plot();
 
-            if (sh != null)
-                plotSvg();
-            else if (gcodeData != null)
-                plotGcode();
-            else if (oimg != null)
-                plotImage();
-
-            if(plottingSvg || plottingImage || plottingGcode || plottingStipple)
+            if(currentPlot.isPlotting() )
             {
-                if(myPort == null)
+                if (com.myPort == null)
                     b.setCaptionLabel("Step");
                 else
                 {
@@ -455,27 +402,20 @@
 
     public void dorotate()
     {
-        rotation += 90;
-        if (rotation >= 360)
-            rotation = 0;
-        println("do rotate "+rotation);
-
-        rotateSvg();
-        rotateGcode();
-        rotateImg();
+        currentPlot.rotate();
     }
 
     public void mirrorX()
     {
         flipX *= -1;
         updateScale();
-        flipImgX();
+        currentPlot.flipX();
     }
     public void mirrorY()
     {
         flipY *= -1;
         updateScale();
-        flipImgY();
+        currentPlot.flipY();
     }
     public void showPenUp()
     {
@@ -495,26 +435,23 @@
 
         if (b.getCaptionLabel().getText().indexOf("Up") > 0)
         {
-            sendPenUp();
-
+            com.sendPenUp();
         } else
         {
-            sendPenDown();
-
+            com.sendPenDown();
         }
     }
 
     public void goHome()
     {
-        sendAbsolute();
-
-        sendPenUp();
-        sendMoveG0(homeX,homeY);
+        com.sendAbsolute();
+        com.sendPenUp();
+        com.sendMoveG0(homeX, homeY);
     }
 
     public void off()
     {
-        sendMotorOff();
+        com.sendMotorOff();
     }
 
     public void save()
@@ -524,11 +461,7 @@
 
     public void export()
     {
-        if(sh != null)
-            exportGcode();
-        else if(imageMode == HATCH || imageMode == STIPPLE)
-            exportGcode();
-
+        exportGcode();
     }
 
     public void speedChanged(int speed)
@@ -548,28 +481,23 @@
 
     public void pixelSlider(int size)
     {
-        // int s = (size/2)*2;
-
         setPixelSize(size);
-        // if(s != size)
-        //  pixelSizeSlider.setValue(s);
     }
 
     public void scale(float scale)
     {
         setuserScale(scale);
-
     }
 
     public void jog(boolean jog, int x, int y)
     {
         if (jog) {
-            sendRelative();
+            com.sendRelative();
             jogX = x;
             jogY = y;
         } else
         {
-            sendAbsolute();
+            com.sendAbsolute();
             jogX = 0;
             jogY = 0;
         }

@@ -1,7 +1,6 @@
 import processing.core.*;
 import processing.event.*;
 
-
 import controlP5.*;
 import geomerative.*;
 import processing.serial.*;
@@ -20,8 +19,6 @@ import java.util.Vector;
 import toxi.geom.*;
 import toxi.geom.mesh2d.*;
 import toxi.processing.*;
-
-
 import java.util.ArrayList;
 import java.io.File;
 import java.io.BufferedReader;
@@ -29,8 +26,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
 
+
+
+
+
+
     final static String ICON  = "icons/penDown.png";
-    final static String TITLE = "PenPlotter v0.5";
+    final static String TITLE = "PenPlotter v0.6";
 
     ControlP5 cp5;
     Handle[] handles;
@@ -46,12 +48,12 @@ import java.io.IOException;
     int jogY;                 // set if jog Y button pressed
 
     int machineWidth = 840;   // Width of machine in mm
-    int homeX = machineWidth/2; //X Home position 
+    int homeX = machineWidth/2; //X Home position
     int machineHeight = 800;    //machine Height only used to draw page height
     int homeY = 250;          // location of homeY good location is where gondola hangs with motor power off
 
-    float currentX = homeX;   // X location of gondola 
-    float currentY = homeY;   // X location of gondola 
+    float currentX = homeX;   // X location of gondola
+    float currentY = homeY;   // X location of gondola
 
     int speedValue = 500;     // speed of motors controlled with speed slider
 
@@ -71,7 +73,7 @@ import java.io.IOException;
     int oldOffX;             // old offset when right drag starts
     int oldOffY;
 
-    int offX = 0;            // offset of drawing from origin 
+    int offX = 0;            // offset of drawing from origin
     int offY = 0;
 
     int startX;              // start location of mouse drag
@@ -107,6 +109,30 @@ import java.io.IOException;
     int drawColor = color(255,0,0);
     int rapidColor = color(0,255,0);
 
+    Plot currentPlot = new Plot();
+    float lastX = 0;
+    float lastY = 0;
+    PApplet applet = this;
+    PImage simage;
+    PImage oimg;
+    StipplePlot stipplePlot = new StipplePlot();
+    DiamondPlot diamondPlot = new DiamondPlot();
+    HatchPlot hatchPlot = new HatchPlot();
+    SquarePlot squarePlot = new SquarePlot();
+    float svgDpi = 72;
+    float svgScale = 25.4f / svgDpi;
+
+    float penWidth = 0.5f;
+    int pixelSize = 8;
+    int range = 255 / (int) ((float) (pixelSize) / penWidth);
+
+    int HATCH = 0;
+    int DIAMOND = 1;
+    int SQUARE = 2;
+    int STIPPLE = 3;
+    int imageMode = HATCH;
+
+    Com com = new Com();
 
     private void prepareExitHandler () {
 
@@ -122,7 +148,7 @@ import java.io.IOException;
     public void exit()
     {
         println("exit");
-        sendMotorOff();
+        com.sendMotorOff();
         delay(1000);
         super.exit();
     }
@@ -133,16 +159,13 @@ import java.io.IOException;
         pg.beginDraw();
         pg.image(img, 0, 0, 16, 16);
         pg.endDraw();
-
         frame.setIconImage(pg.image);
-
     }
 
     public void changeAppTitle(String title) {
         //surface.setTitle(title);
         frame.setTitle(title);
     }
-
 
     public void setup() {
 
@@ -178,10 +201,10 @@ import java.io.IOException;
         cncSafeHeight = Float.parseFloat(props.getProperty("cnc.safeHeight"));
 
 
-        baudRate = Long.parseLong(props.getProperty("com.baudrate"));
+        com.baudRate = Long.parseLong(props.getProperty("com.baudrate"));
         //todo lastPort not used
 
-        lastPort = Integer.parseInt(props.getProperty("com.serialPort"));
+        com.lastPort = Integer.parseInt(props.getProperty("com.serialPort"));
 
         offX = Integer.parseInt(props.getProperty("machine.offX"));
         offY = Integer.parseInt(props.getProperty("machine.offY"));
@@ -199,7 +222,7 @@ import java.io.IOException;
 
         shortestSegment = Float.parseFloat(props.getProperty("svg.shortestSegment"));
 
-        listPorts();
+        com.listPorts();
 
         RG.init(this);
         RG.ignoreStyles(true);
@@ -223,74 +246,7 @@ import java.io.IOException;
         handles[1] = new Handle("mWidth", machineWidth, machineHeight/2, 0, 10, handles, true, false, 64);
         handles[2] = new Handle("mHeight", homeX, machineHeight, 0, 10, handles, false, true, 64);
         handles[3] = new Handle("gondola", (int)currentX, (int)currentY, 0, 10, handles, true, true, 2);
-        // handles[4] = new Handle("mmPerRev",0,0,0,10,handles,false,true,64);
-        // handles[5] = new Handle("stepsPerRev",machineWidth,0,0,10,handles,false,true,64);
 
-        makeHatchImage();
-
-
-    }
-
-    public void makeHatchImage()
-    {
-        hatchImage = createGraphics(machineWidth,machineHeight);
-        hatchImage.beginDraw();
-        hatchImage.clear();
-        hatchImage.endDraw();
-    }
-
-    public void mouseReleased() {
-
-        if (overLeft || overRight || overTop || overBottom)
-        {
-            cropImage(cropLeft, cropTop, cropRight, cropBottom);
-        }
-        overLeft = false;
-        overRight = false;
-        overTop = false;
-        overBottom = false;
-        startX = 0;
-        startY = 0;
-
-        for (Handle handle : handles) {
-            if (handle.wasActive()) {
-                if (handle.id.equals("gondola")) {
-
-                    sendMoveG0(currentX, currentY);
-                }
-                if (handle.id.equals("homeY")) {
-                    sendHome();
-                }
-                if (handle.id.equals("mWidth")) {
-                    sendSpecs();
-                }
-            }
-            handle.releaseEvent();
-        }
-    }
-
-    public void handleMoved(String id, int x, int y)
-    {
-        if (id.equals("homeY"))
-            homeY = y;
-        else if(id.equals("gondola")) {
-            
-                currentX = x;
-                currentY = y;
-        }
-        else if(id.equals("mWidth")) { 
-                machineWidth = x;
-                homeX = machineWidth / 2;
-                handles[2].x = homeX;
-                makeHatchImage();
-
-         }
-         else if(id.equals("mHeight")) { 
-                machineHeight = y;
-                handles[1].y = y / 2;
-                makeHatchImage();
-         }
-        
     }
 
     public void mousePressed()
@@ -303,6 +259,91 @@ import java.io.IOException;
         oldOffY = offY;
     }
 
+    public void mouseDragged()
+    {
+        if (mouseButton == CENTER) {
+            originX = oldOriginX + mouseX -startX;
+            originY = oldOriginY + mouseY -startY;
+        } else if (mouseButton == RIGHT)
+        {
+            offX = oldOffX + (int)((mouseX -startX)/zoomScale);
+            offY = oldOffY + (int)((mouseY -startY)/zoomScale);
+        }
+    }
+
+    public void mouseReleased() {
+
+        if (overLeft || overRight || overTop || overBottom)
+        {
+
+            currentPlot.crop(cropLeft, cropTop, cropRight, cropBottom);
+        }
+        overLeft = false;
+        overRight = false;
+        overTop = false;
+        overBottom = false;
+        startX = 0;
+        startY = 0;
+
+        for (Handle handle : handles) {
+            if (handle.wasActive()) {
+                if (handle.id.equals("gondola")) {
+
+                    com.sendMoveG0(currentX, currentY);
+                }
+                if (handle.id.equals("homeY")) {
+                    com.sendHome();
+                }
+                if (handle.id.equals("mWidth")) {
+                    com.sendSpecs();
+                }
+            }
+            handle.releaseEvent();
+        }
+    }
+
+    public void mouseWheel(MouseEvent event) {
+
+        float e = event.getCount();
+
+        if (e > 0)
+            setZoom(zoomScale+=0.1f);
+        else if(zoomScale > 0.1f)
+            setZoom(zoomScale-=0.1f);
+    }
+
+    public void keyPressed() {
+        if (key == 'x') {
+            flipX *= -1;
+            updateScale();
+        } else if (key == 'y') {
+            flipY *= -1;
+            updateScale();
+        }
+    }
+
+    public void handleMoved(String id, int x, int y)
+    {
+        if (id.equals("homeY"))
+            homeY = y;
+        else if(id.equals("gondola")) {
+
+            currentX = x;
+            currentY = y;
+        }
+        else if(id.equals("mWidth")) {
+            machineWidth = x;
+            homeX = machineWidth / 2;
+            handles[2].x = homeX;
+            //makeHatchImage();
+
+        }
+        else if(id.equals("mHeight")) {
+            machineHeight = y;
+            handles[1].y = y / 2;
+           // makeHatchImage();
+        }
+    }
 
     public boolean overCropLeft(int x, int y)
     {
@@ -375,53 +416,14 @@ import java.io.IOException;
         overBottom = true;
         return true;
     }
-    public void mouseDragged()
-    {
-        // if(mouseX < menuWidth) return;
-        // if(overImage(startX,startY)) return;
-
-
-        if (mouseButton == CENTER) {
-
-            originX = oldOriginX + mouseX -startX;
-            originY = oldOriginY + mouseY -startY;
-        } else if (mouseButton == RIGHT)
-        {
-
-            offX = oldOffX + (int)((mouseX -startX)/zoomScale);
-            offY = oldOffY + (int)((mouseY -startY)/zoomScale);
-        }
-    }
-
-    public void mouseWheel(MouseEvent event) {
-
-        float e = event.getCount();
-
-        if (e > 0)
-            setZoom(zoomScale+=0.1f);
-        else if(zoomScale > 0.1f)
-            setZoom(zoomScale-=0.1f);
-    }
-
-    public void keyPressed() {
-        if (key == 'x') {
-            flipX *= -1;
-            updateScale();
-        } else if (key == 'y') {
-            flipY *= -1;
-            updateScale();
-        }
-    }
 
     public void setSpeed(int value)
     {
         speedValue = value;
-        sendSpeed(speedValue);
-
+        com.sendSpeed(speedValue);
     }
 
-    public void setuserScale(float value)
-    {
+    public void setuserScale(float value) {
         userScale = value;
         updateScale();
         setImageScale();
@@ -431,16 +433,56 @@ import java.io.IOException;
     {
         scaleX = svgScale*userScale*flipX;
         scaleY = svgScale*userScale*flipY;
-
     }
+
+    public void setImageScale() {
+        currentPlot.crop(cropLeft, cropTop, cropRight, cropBottom);
+    }
+
+    public void setZoom(float value)
+    {
+        zoomScale = value;
+    }
+
+    public void setPenWidth(float width) {
+        penWidth = width;
+        com.sendPenWidth();
+
+        if (!currentPlot.isPlotting()) {
+            int levels = (int) ((float) (pixelSize) / penWidth);
+            if (levels < 1) levels = 1;
+            if (levels > 255) levels = 255;
+            range = 255 / levels;
+
+            currentPlot.calculate();
+        }
+    }
+
+    public void setPixelSize(int value) {
+
+        if (!currentPlot.isPlotting()) {
+            pixelSize = value;
+
+            int levels = (int) ((float) (pixelSize) / penWidth);
+            if (levels < 1) levels = 1;
+            if (levels > 255) levels = 255;
+            range = 255 / levels;
+
+            currentPlot.calculate();
+
+        }
+    }
+
     public float unScaleX(float x)
     {
         return (x-originX)/zoomScale+homeX;
     }
+
     public float unScaleY(float y)
     {
         return (y-originY)/zoomScale+homeY;
     }
+
     public float scaleX(float x)
     {
         return (x-homeX)*zoomScale + originX;
@@ -466,18 +508,8 @@ import java.io.IOException;
         line(scaleX(x1), scaleY(y1), scaleX(x2), scaleY(y2));
     }
 
-    public void setZoom(float value)
+    public void draw()
     {
-        zoomScale = value;
-    }
-
-
-
-    public void draw() {
-
-
-
-
         background(backgroundColor);
 
         drawPage();
@@ -491,58 +523,26 @@ import java.io.IOException;
             handle.display();
         }
 
-        if (sh != null)
-        {
-            drawSvg();
-            drawPlottedLine();
-        }
-
         if (oimg != null)
         {
-            if(imageMode == DIAMOND)
-            {
-                drawDiamondPixels();
-            }
-            else if(imageMode == HATCH)
-            {
-                drawHatch();
-            }
-            else if(imageMode == SQUARE)
-            {
-                drawSquarePixels();
-            }
-            else if(imageMode == STIPPLE)
-            {
-                stippleDraw();
-            }
             image(oimg, imageX, imageY, imageWidth, imageHeight);
             drawImageFrame();
             drawSelector();
-            // drawMachineGrid(pixelSize);
         }
 
-        if (gcodeLoaded)
+        if (currentPlot.isLoaded())
         {
-            drawPath();
+            currentPlot.draw();
         }
-
-        // drawMenu();
-
-
 
         if (jogX != 0)
         {
-
-            moveDeltaX(jogX);
-
+            com.moveDeltaX(jogX);
         }
         if (jogY != 0)
         {
-            moveDeltaY(jogY);
-
+            com.moveDeltaY(jogY);
         }
-
-
     }
 
     public void drawGondola()
@@ -560,6 +560,7 @@ import java.io.IOException;
         ellipse(scaleX(0), scaleY(0), 20, 20);
         ellipse(scaleX(machineWidth), scaleY(0), 20, 20);
     }
+
     public void drawPage()
     {
         stroke(gridColor);
@@ -608,7 +609,6 @@ import java.io.IOException;
     {
         if (overCropLeft(startX, startY))
         {
-
             cropLeft = mouseX;
             if (cropLeft < imageX)
                 cropLeft = imageX;
@@ -616,7 +616,6 @@ import java.io.IOException;
                 cropLeft = cropRight-20;
         } else if (overCropRight(startX, startY))
         {
-
             cropRight = mouseX;
             if (cropRight < imageX+20)
                 cropRight = imageX+20;
@@ -624,7 +623,6 @@ import java.io.IOException;
                 cropRight = imageX+imageWidth;
         } else if (overCropTop(startX, startY))
         {
-
             cropTop = mouseY;
             if (cropTop < imageY)
                 cropTop = imageY;
@@ -632,7 +630,6 @@ import java.io.IOException;
                 cropTop = imageY+imageHeight-20;
         } else if (overCropBottom(startX, startY))
         {
-
             cropBottom = mouseY;
             if (cropBottom < imageY-20)
                 cropBottom = imageY-20;
