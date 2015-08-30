@@ -39,7 +39,7 @@ Next I wrote a simpler version of the controller that speaks gcode and uses mm u
   - Images can be cropped, scaled and rotated by multiples of 90 degrees
   - Images can be flipped about the X or Y axis
   - Four image styles are supported
-    - Datch: a cross hatch style similar to blackstripes
+    - Hatch: a cross hatch style similar to blackstripes
     - Daimond: Diamond shaped pixels similar to the original poloar graph
     - Square: Simple square wave pixes. 
     - Stipple: Stippled similar to stipplegen.
