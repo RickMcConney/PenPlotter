@@ -1,6 +1,5 @@
  class SvgPlot extends Plot {
         RShape sh = null;
-        ArrayList<Path> optimizedPaths;
 
         int svgPathIndex = -1;        // curent path that is plotting
         int svgLineIndex = -1;        // current line within path that is plotting
@@ -9,17 +8,14 @@
 
         public void clear() {
             sh = null;
-            optimizedPaths = null;
-            loaded = false;
-            reset();
+            super.clear();
         }
 
         public void reset() {
-            plotting = false;
-            plotDone();
+
             svgPathIndex = -1;
             svgLineIndex = -1;
-            com.clearQueue();
+            super.reset();
         }
 
         public void drawPlottedLine() {
@@ -29,13 +25,13 @@
             float cx = homeX;
             float cy = homeY;
 
-            for (int i = 0; i < optimizedPaths.size(); i++) {
-                for (int j = 0; j < optimizedPaths.get(i).size() - 1; j++) {
+            for (int i = 0; i < penPaths.size(); i++) {
+                for (int j = 0; j < penPaths.get(i).size() - 1; j++) {
                     if (i > svgPathIndex || (i == svgPathIndex && j > svgLineIndex)) return;
-                    float x1 = optimizedPaths.get(i).getPoint(j).x * scaleX + machineWidth / 2 + offX;
-                    float y1 = optimizedPaths.get(i).getPoint(j).y * scaleY + homeY + offY;
-                    float x2 = optimizedPaths.get(i).getPoint(j + 1).x * scaleX + machineWidth / 2 + offX;
-                    float y2 = optimizedPaths.get(i).getPoint(j + 1).y * scaleY + homeY + offY;
+                    float x1 = penPaths.get(i).getPoint(j).x * scaleX + machineWidth / 2 + offX;
+                    float y1 = penPaths.get(i).getPoint(j).y * scaleY + homeY + offY;
+                    float x2 = penPaths.get(i).getPoint(j + 1).x * scaleX + machineWidth / 2 + offX;
+                    float y2 = penPaths.get(i).getPoint(j + 1).y * scaleY + homeY + offY;
 
 
                     if (j == 0) {
@@ -59,7 +55,7 @@
             }
         }
 
-        public void nextPlot() {
+        public void nextPlot(boolean preview) {
             if (svgPathIndex < 0) {
                 plotting= false;
                 plotDone();
@@ -71,13 +67,13 @@
                 com.sendAbsolute();
                 com.sendSpeed(speedValue);
             }
-            if (svgPathIndex < optimizedPaths.size()) {
-                if (svgLineIndex < optimizedPaths.get(svgPathIndex).size() - 1) {
+            if (svgPathIndex < penPaths.size()) {
+                if (svgLineIndex < penPaths.get(svgPathIndex).size() - 1) {
 
-                    float x1 = optimizedPaths.get(svgPathIndex).getPoint(svgLineIndex).x * scaleX + machineWidth / 2 + offX;
-                    float y1 = optimizedPaths.get(svgPathIndex).getPoint(svgLineIndex).y * scaleY + homeY + offY;
-                    float x2 = optimizedPaths.get(svgPathIndex).getPoint(svgLineIndex + 1).x * scaleX + machineWidth / 2 + offX;
-                    float y2 = optimizedPaths.get(svgPathIndex).getPoint(svgLineIndex + 1).y * scaleY + homeY + offY;
+                    float x1 = penPaths.get(svgPathIndex).getPoint(svgLineIndex).x * scaleX + machineWidth / 2 + offX;
+                    float y1 = penPaths.get(svgPathIndex).getPoint(svgLineIndex).y * scaleY + homeY + offY;
+                    float x2 = penPaths.get(svgPathIndex).getPoint(svgLineIndex + 1).x * scaleX + machineWidth / 2 + offX;
+                    float y2 = penPaths.get(svgPathIndex).getPoint(svgLineIndex + 1).y * scaleY + homeY + offY;
 
 
                     if (svgLineIndex == 0) {
@@ -91,7 +87,7 @@
                 } else {
                     svgPathIndex++;
                     svgLineIndex = 0;
-                    nextPlot();
+                    nextPlot(true);
                 }
             } else // finished
             {
@@ -108,69 +104,20 @@
             }
         }
 
-        public void export(File file) {
-            if (optimizedPaths == null) return;
-            BufferedWriter writer = null;
-            try {
-                writer = new BufferedWriter(new FileWriter(file));
-
-                for (int i = 0; i < optimizedPaths.size(); i++) {
-                    Path p = optimizedPaths.get(i);
-                    if (i == 0) {
-                        writer.write("G21\n"); //mm
-                        writer.write("G90\n"); // absolute
-                        writer.write("G0 F" + speedValue + "\n");
-                    }
-                    for (int j = 0; j < p.size() - 1; j++) {
-
-                        float x1 = p.getPoint(j).x * scaleX + offX;
-                        float y1 = p.getPoint(j).y * scaleY + offY;
-                        float x2 = p.getPoint(j + 1).x * scaleX + offX;
-                        float y2 = p.getPoint(j + 1).y * scaleY + offY;
-
-
-                        if (j == 0) {
-                            // pen up
-                            writer.write("G0 Z" + cncSafeHeight + "\n");
-                            writer.write("G0 X" + nf(x1, 0, 3) + " Y" + nf(y1, 0, 3) + "\n");
-                            //pen Down
-                            writer.write("G0 Z0\n");
-                        }
-
-                        writer.write("G1 X" + nf(x2, 0, 3) + " Y" + nf(y2, 0, 3) + "\n");
-                    }
-                }
-
-
-                float x1 = 0;
-                float y1 = 0;
-
-                writer.write("G0 Z" + cncSafeHeight + "\n");
-                writer.write("G0 X" + x1 + " Y" + y1 + "\n");
-            } catch (IOException e) {
-                System.out.print(e);
-            } finally {
-                try {
-                    if (writer != null)
-                        writer.close();
-                } catch (IOException e) {
-                }
-            }
-        }
 
         public void plot() {
             if (sh != null) {
                 plotting = true;
                 svgPathIndex = 0;
                 svgLineIndex = 0;
-                nextPlot();
+                nextPlot(true);
             }
         }
 
         public void rotate() {
-            if (optimizedPaths == null) return;
+            if (penPaths == null) return;
 
-            for (Path p : optimizedPaths) {
+            for (Path p : penPaths) {
                 for (int j = 0; j < p.size(); j++) {
                     float x = p.getPoint(j).x;
                     float y = p.getPoint(j).y;
@@ -188,8 +135,8 @@
             noFill();
 
 
-            for (int i = 0; i < optimizedPaths.size(); i++) {
-                Path p = optimizedPaths.get(i);
+            for (int i = 0; i < penPaths.size(); i++) {
+                Path p = penPaths.get(i);
 
                 stroke(rapidColor);
                 if (i == 0)
@@ -235,7 +182,7 @@
             long total = 0;
             float lx = homeX;
             float ly = homeY;
-            for (Path path : optimizedPaths) {
+            for (Path path : penPaths) {
                 for (int j = 0; j < path.size(); j++) {
                     RPoint p = path.getPoint(j);
                     total += dist(lx, ly, p.x, p.y);
@@ -248,7 +195,7 @@
 
         public void optimize(RShape shape) {
             RPoint[][] pointPaths = shape.getPointsInPaths();
-            optimizedPaths = new ArrayList<Path>();
+            penPaths = new ArrayList<Path>();
             ArrayList<Path> remainingPaths = new ArrayList<Path>();
 
             for (RPoint[] pointPath : pointPaths) {
@@ -265,32 +212,32 @@
             println("Original number of paths " + remainingPaths.size());
 
             Path path = nearestPath(homeX, homeY, remainingPaths);
-            optimizedPaths.add(path);
+            penPaths.add(path);
 
             int numPaths = remainingPaths.size();
             for (int i = 0; i < numPaths; i++) {
                 RPoint last = path.last();
                 path = nearestPath(last.x, last.y, remainingPaths);
-                optimizedPaths.add(path);
+                penPaths.add(path);
             }
 
             if (shortestSegment > 0) {
-                remainingPaths = optimizedPaths;
-                optimizedPaths = new ArrayList<Path>();
+                remainingPaths = penPaths;
+                penPaths = new ArrayList<Path>();
 
                 mergePaths(shortestSegment, remainingPaths);
-                println("number of optimized paths " + optimizedPaths.size());
+                println("number of optimized paths " + penPaths.size());
 
-                println("number of points " + totalPoints(optimizedPaths));
+                println("number of points " + totalPoints(penPaths));
                 removeShort(shortestSegment);
-                println("number of opt points " + totalPoints(optimizedPaths));
+                println("number of opt points " + totalPoints(penPaths));
             }
             totalPathLength();
 
         }
 
         public void removeShort(float len) {
-            for (Path optimizedPath : optimizedPaths) optimizedPath.removeShort(len);
+            for (Path optimizedPath : penPaths) optimizedPath.removeShort(len);
         }
 
         public int totalPoints(ArrayList<Path> list) {
@@ -303,14 +250,14 @@
 
         public void mergePaths(float len, ArrayList<Path> remainingPaths) {
             Path cur = remainingPaths.get(0);
-            optimizedPaths.add(cur);
+            penPaths.add(cur);
 
             for (int i = 1; i < remainingPaths.size(); i++) {
                 Path p = remainingPaths.get(i);
                 if (dist(cur.last().x, cur.last().y, p.first().x, p.first().y) < len) {
                     cur.merge(p);
                 } else {
-                    optimizedPaths.add(p);
+                    penPaths.add(p);
                     cur = p;
                 }
             }

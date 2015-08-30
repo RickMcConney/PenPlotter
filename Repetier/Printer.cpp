@@ -493,7 +493,7 @@ uint8_t Printer::setDestinationStepsFromGCode(GCode *com)
         if(unitIsInches)
             feedrate = com->F * 0.0042333f * (float)feedrateMultiply;  // Factor is 25.5/60/100
         else
-            feedrate = com->F * (float)feedrateMultiply * 0.00016666666f;
+            feedrate = com->F;// * (float)feedrateMultiply * 0.00016666666f;
     }
     if(!Printer::isPositionAllowed(lastCmdPos[X_AXIS],lastCmdPos[Y_AXIS], lastCmdPos[Z_AXIS])) {
         currentPositionSteps[E_AXIS] = destinationSteps[E_AXIS];

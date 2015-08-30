@@ -1,10 +1,5 @@
  class HatchPlot extends SquarePlot
     {
-        ArrayList<Path> hatchPaths;
-        PGraphics hatchImage = null;
-
-
-
         public void showControls()
         {
             filterDropList.setVisible(true);
@@ -13,31 +8,12 @@
             t2Slider.setVisible(true);
             t3Slider.setVisible(true);
             t4Slider.setVisible(true);
-
-        }
-
-        void init()
-        {
-            makeHatchImage();
-        }
-        public void makeHatchImage()
-        {
-            hatchImage = createGraphics(machineWidth,machineHeight);
-            hatchImage.beginDraw();
-            hatchImage.clear();
-            hatchImage.endDraw();
-        }
-
-        public void clear()
-        {
-            super.clear();
-            hatchPaths = null;
         }
 
         public void calculate() {
             PImage image = simage;
             int size = pixelSize;
-            hatchPaths = new ArrayList<Path>();
+            penPaths.clear();
             ArrayList<Path> paths;
 
             int threshold;
@@ -46,6 +22,49 @@
             //diag down right
 
             boolean reverse = false;
+            
+            if(image.width >= image.height)
+            {
+                for (int x = ((image.width - 1) / size) * size; x >= 0; x -= size) {
+                  if (x > image.width-image.height) {
+                        paths = findPaths(image, x, image.width-x-1, image.width + 1, threshold);
+                  }                 
+                  else 
+                  {
+                        paths = findPaths(image, x, image.height - 1, image.width + 1, threshold);
+                  }
+                  reverse = addPaths(paths, reverse);
+                }
+                
+                for(int y = size;y<image.height;y+=size)
+                {
+                   paths = findPaths(image, y*image.width, image.height -y- 1, image.width + 1, threshold);
+                  reverse = addPaths(paths, reverse);
+                }
+            }
+            else
+            {
+                for (int x = ((image.width - 1) / size) * size; x >= 0; x -= size) {                  
+                        paths = findPaths(image, x, image.width-x-1, image.width + 1, threshold);
+                        reverse = addPaths(paths, reverse);
+                  } 
+                  
+                for(int y = size;y<image.height;y+=size)
+                {
+                  if(y<image.height-image.width)
+                  {
+                     paths = findPaths(image, y*image.width, image.width-1, image.width + 1, threshold); 
+                     reverse = addPaths(paths, reverse);                  
+                  }
+                  else
+                  {
+                    paths = findPaths(image, y*image.width, image.height -y- 1, image.width + 1, threshold);
+                    reverse = addPaths(paths, reverse);
+                  }
+                  
+                }
+            }
+   /*         
 
             for (int x = ((image.width - 1) / size) * size; x >= 0; x -= size) {
                 if (image.height >= image.width) {
@@ -74,37 +93,54 @@
                 }
                 reverse = addPaths(paths, reverse);
             }
-
+*/
 
             // diag down left
             threshold = (int) t2Slider.getValue();
 
-            for (int x = 0; x < image.width; x += size) {
-                if (image.height >= image.width) {
-                    paths = findPaths(image, x, x, image.width - 1, threshold);
-                } else {
-                    if (x >= image.width - image.height) {
+            if(image.width >= image.height)
+            {
+                for (int x = 0; x < image.width  ; x += size) {
+                  if (x < image.height) {
+                        paths = findPaths(image, x, x, image.width - 1, threshold);
+                  }                 
+                  else 
+                  {
                         paths = findPaths(image, x, image.height - 1, image.width - 1, threshold);
-                    } else {
-                        paths = findPaths(image, x, image.height - 1 - x, image.width - 1, threshold);
-                    }
+                  }
+                  reverse = addPaths(paths, reverse);
                 }
-                reverse = addPaths(paths, reverse);
-            }
-
-
-            for (int y = size; y < image.height; y += size) {
-                if (image.height <= image.width) {
-                    paths = findPaths(image, y * image.width - 1, image.height - 1 - y, image.width - 1, threshold);
-                } else {
-                    if (y >= image.height - image.width)
-                        paths = findPaths(image, y * image.width - 1, image.height - 1 - y, image.width - 1, threshold);
-                    else
-                        paths = findPaths(image, y * image.width - 1, image.width - 1, image.width - 1, threshold);
+                int remainder = image.width%size;
+                for(int y = remainder;y<image.height;y+=size)
+                {
+                   paths = findPaths(image, y*image.width-1, image.height -y- 1, image.width - 1, threshold);
+                  reverse = addPaths(paths, reverse);
                 }
-                reverse = addPaths(paths, reverse);
-
             }
+            else
+            {
+                for (int x = 0; x < image.width  ; x += size) {                  
+                        paths = findPaths(image, x, x, image.width - 1, threshold);
+                        reverse = addPaths(paths, reverse);
+                  } 
+                  
+                int remainder = image.width%size;
+                for(int y = remainder;y<image.height;y+=size)
+                {
+                  if(y<image.height-image.width)
+                  {
+                     paths = findPaths(image, y*image.width-1, image.width-1, image.width - 1, threshold); 
+                     reverse = addPaths(paths, reverse);                  
+                  }
+                  else
+                  {
+                    paths = findPaths(image, y*image.width-1, image.height -y- 1, image.width - 1, threshold);
+                    reverse = addPaths(paths, reverse);
+                  }
+                  
+                }
+            }
+            
 
             // vertical
             threshold = (int) t3Slider.getValue();
@@ -122,7 +158,7 @@
                 reverse = addPaths(paths, reverse);
             }
 
-
+            drawPreview();
         }
 
         public boolean addPaths(ArrayList<Path> paths, boolean reverse) {
@@ -130,10 +166,10 @@
                 if (reverse) {
                     for (int i = paths.size() - 1; i >= 0; i--) {
                         paths.get(i).reverse();
-                        hatchPaths.add(paths.get(i));
+                        penPaths.add(paths.get(i));
                     }
                 } else {
-                    for (Path path : paths) hatchPaths.add(path);
+                    for (Path path : paths) penPaths.add(path);
                 }
                 return !reverse;
             }
@@ -149,7 +185,7 @@
             ArrayList<Path> paths = new ArrayList<Path>();
             int p = start;
             for (int i = 0; i < len; i++) {
-                if (p >= image.pixels.length) return paths;
+                if (p >= image.pixels.length || p < 0) return paths;
                 c = image.pixels[p];
                 if (up && brightness(c) < threshold) {
                     path = new Path();
@@ -176,159 +212,64 @@
             return paths;
         }
 
-        public void plotHatch() {
-            dindex = 0;
-            plotting = true;
-            plottingStarted();
-            nextPlot();
+
+        public void drawPreview()
+        {
+            if(preview == null)
+            {
+              preview = createGraphics(machineWidth,machineHeight);
+              preview.beginDraw();
+              preview.clear();
+              preview.endDraw();
+            }
+            preview.beginDraw();
+            preview.clear();
+            preview.strokeWeight(0.1);
+  
+            preview.stroke(0,0,0,255);
+            preview.beginShape(LINES);
+            for (int i = 0; i < penIndex; i++) {
+               Path p = penPaths.get(i);
+               for(int j = 0;j<p.size()-1;j++)
+               {
+                preview.vertex(p.getPoint(j).x , p.getPoint(j).y );
+                preview.vertex(p.getPoint(j+1).x , p.getPoint(j+1).y );
+               }
+            }
+            preview.endShape();
+            
+            preview.stroke(0,0,0,alpha);
+            preview.beginShape(LINES);
+            for (int i = penIndex; i < penPaths.size(); i++) {
+               Path p = penPaths.get(i);
+               for(int j = 0;j<p.size()-1;j++)
+               {
+                preview.vertex(p.getPoint(j).x , p.getPoint(j).y );
+                preview.vertex(p.getPoint(j+1).x , p.getPoint(j+1).y );
+               }
+            }
+            preview.endShape();
+            
+            preview.endDraw();
+            loaded = true;
         }
-        public void nextPlot() {
-            if (dindex < hatchPaths.size()) {
-                Path p = hatchPaths.get(dindex);
+        
+        public void nextPlot(boolean preview) {
+            if (penIndex < penPaths.size()) {
+                Path p = penPaths.get(penIndex);
                 com.sendPenUp();
                 com.sendMoveG0(p.first().x + homeX - simage.width / 2 + offX, p.first().y + homeY + offY);
                 com.sendPenDown();
                 com.sendMoveG1(p.last().x + homeX - simage.width / 2 + offX, p.last().y + homeY + offY);
-
-                dindex++;
+  
+                if(preview)
+                  drawPreview();
+                penIndex++;
             } else {
-                plotDone();
-                alpha = 255;
-                plotting = false;
+                plottingStopped();
             }
 
         }
 
-        public void export(File file) {
-            if (hatchPaths == null) return;
-            Path p;
-            BufferedWriter writer = null;
-            try {
-                writer = new BufferedWriter(new FileWriter(file));
-
-                for (int i = 0; i < hatchPaths.size(); i++) {
-                    p = hatchPaths.get(i);
-
-                    if (i == 0) {
-                        writer.write("G21\n"); //mm
-                        writer.write("G90\n"); // absolute
-                        writer.write("G0 F" + speedValue + "\n");
-                    }
-                    for (int j = 0; j < p.size() - 1; j++) {
-
-                        float x1 = p.getPoint(j).x - simage.width / 2 + offX;
-                        float y1 = p.getPoint(j).y + offY;
-                        float x2 = p.getPoint(j + 1).x - simage.width / 2 + offX;
-                        float y2 = p.getPoint(j + 1).y + offY;
-
-
-                        if (j == 0) {
-                            // pen up
-                            writer.write("G0 Z" + cncSafeHeight + "\n");
-                            writer.write("G0 X" + nf(x1, 0, 3) + " Y" + nf(y1, 0, 3) + "\n");
-                            //pen Down
-                            writer.write("G0 Z0\n");
-                        }
-
-                        writer.write("G1 X" + nf(x2, 0, 3) + " Y" + nf(y2, 0, 3) + "\n");
-                    }
-                }
-
-
-                float x1 = 0;
-                float y1 = 0;
-
-                writer.write("G0 Z" + cncSafeHeight + "\n");
-                writer.write("G0 X" + x1 + " Y" + y1 + "\n");
-            } catch (IOException e) {
-                System.out.print(e);
-            } finally {
-                try {
-                    if (writer != null)
-                        writer.close();
-                } catch (IOException e) {
-                }
-            }
-        }
-
-        public void imgdrawHatch() {
-            if (hatchImage != null)
-                image(hatchImage, scaleX(offX + homeX - simage.width / 2), scaleY(offY + homeY), hatchImage.width * zoomScale, hatchImage.height * zoomScale);
-        }
-
-        public void draw() {
-            if (hatchPaths == null) return;
-            Path p;
-
-            strokeWeight(0.1f);
-
-            stroke(color(0, 0, 0, 255));
-            beginShape(LINES);
-            for (int i = 0; i < dindex; i++) {
-                p = hatchPaths.get(i);
-                vertex(scaleX(p.first().x + homeX - simage.width / 2 + offX), scaleY(p.first().y + homeY + offY));
-                vertex(scaleX(p.last().x + homeX - simage.width / 2 + offX), scaleY(p.last().y + homeY + offY));
-            }
-            endShape();
-
-            stroke(color(0, 0, 0, alpha));
-            beginShape(LINES);
-            for (int i = dindex; i < hatchPaths.size(); i++) {
-                p = hatchPaths.get(i);
-                vertex(scaleX(p.first().x + homeX - simage.width / 2 + offX), scaleY(p.first().y + homeY + offY));
-                vertex(scaleX(p.last().x + homeX - simage.width / 2 + offX), scaleY(p.last().y + homeY + offY));
-            }
-            endShape();
-        }
-
-        public void hatchImgdraw() {
-
-            if (hatchPaths == null) return;
-
-            Path p;
-
-            hatchImage.beginDraw();
-            hatchImage.clear();
-            hatchImage.strokeWeight(0.1f);
-
-            hatchImage.stroke(color(0, 0, 0, 255));
-            hatchImage.beginShape(LINES);
-            for (int i = 0; i < dindex; i++) {
-                p = hatchPaths.get(i);
-                //hatchImage.vertex(scaleX(p.first().x*userScale+homeX), scaleY(p.first().y*userScale+homeY));
-                // hatchImage.vertex(scaleX(p.last().x*userScale+homeX), scaleY(p.last().y*userScale+homeY));
-                hatchImage.vertex(p.first().x * userScale, p.first().y * userScale);
-                hatchImage.vertex(p.last().x * userScale, p.last().y * userScale);
-
-            }
-            hatchImage.endShape();
-
-            hatchImage.stroke(color(0, 0, 0, alpha));
-            hatchImage.beginShape(LINES);
-            for (int i = dindex; i < hatchPaths.size(); i++) {
-                p = hatchPaths.get(i);
-                hatchImage.vertex(p.first().x * userScale, p.first().y * userScale);
-                hatchImage.vertex(p.last().x * userScale, p.last().y * userScale);
-            }
-            hatchImage.endShape();
-            hatchImage.endDraw();
-        }
-
-
-        public void olddrawHatch() {
-            if (hatchPaths == null) return;
-            Path p;
-
-            for (int i = 0; i < hatchPaths.size(); i++) {
-                p = hatchPaths.get(i);
-                if (i < dindex)
-                    stroke(color(0, 0, 0, 255));
-                else
-                    stroke(color(0, 0, 0, alpha));
-
-                sline(p.first().x * userScale + homeX + offX, p.first().y * userScale + homeY + offY, p.last().x * userScale + homeX + offX, p.last().y * userScale + homeY + offY);
-
-            }
-        }
-
+  
     }

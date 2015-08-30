@@ -76,7 +76,6 @@
         Slider minDotSlider;
         Slider dotRangeSlider;
         Slider whiteSlider;
-        boolean plottingStipple = false;
 
         public void load() {
 
@@ -615,14 +614,6 @@
 
                 for (int i = vorPointsAdded; i < temp; ++i) {
 
-
-                    // Optional, for diagnostics:::
-                    //  println("particles[i].x, particles[i].y " + particles[i].x + ", " + particles[i].y );
-
-
-                    //
-
-
                     voronoi.addPoint(new Vec2D(particles[i].x, particles[i].y));
                     vorPointsAdded++;
                 }
@@ -787,68 +778,6 @@
             }
         }
 
-        public void export(File file) {
-            if (particles.length <= 0) return;
-
-            BufferedWriter writer = null;
-            try {
-                writer = new BufferedWriter(new FileWriter(file));
-
-                for (int r = 0; r < particleRoute.length; r++) {
-                    if (r == 0) {
-                        writer.write("G21\n"); //mm
-                        writer.write("G90\n"); // absolute
-                        writer.write("G0 F" + speedValue + "\n");
-                    }
-                    Vec2D p1 = particles[particleRoute[r]];
-                    Path p = dotPath((int) p1.x, (int) p1.y);
-                    for (int i = 0; i < p.size(); i++) {
-                        float x1 = p.getPoint(i).x - homeX;
-                        float y1 = p.getPoint(i).y - homeY;
-                        if (i == 0) {
-                            if (!showPath || r == 0) {
-                                writer.write("G0 Z" + cncSafeHeight + "\n");
-                                writer.write("G0 X" + nf(x1, 0, 3) + " Y" + nf(y1, 0, 3) + "\n");
-                            } else {
-                                writer.write("G0 Z0\n");
-                                writer.write("G1 X" + nf(x1, 0, 3) + " Y" + nf(y1, 0, 3) + "\n");
-                            }
-                        } else {
-                            //pen Down
-                            writer.write("G0 Z0\n");
-                            writer.write("G1 X" + nf(x1, 0, 3) + " Y" + nf(y1, 0, 3) + "\n");
-                        }
-                    }
-                }
-
-                float x1 = 0;
-                float y1 = 0;
-
-                writer.write("G0 Z" + cncSafeHeight + "\n");
-                writer.write("G0 X" + x1 + " Y" + y1 + "\n");
-            } catch (IOException e) {
-                System.out.print(e);
-            } finally {
-                try {
-                    if (writer != null)
-                        writer.close();
-                } catch (IOException e) {
-                }
-            }
-        }
-
-        public void reset() {
-            dindex = 0;
-            plotting = false;
-            plotDone();
-        }
-
-        public void plot() {
-            dindex = 0;
-            plotting = true;
-            plottingStarted();
-            nextPlot();
-        }
 
         public Path dotPath(int x, int y) {
             float dotScale = (MaxDotSize - MinDotSize);
@@ -879,14 +808,14 @@
             }
         }
 
-        public void nextPlot() {
-            if (dindex < particleRoute.length) {
+        public void nextPlot(boolean preview) {
+            if (penIndex < particleRoute.length) {
 
-                Vec2D p1 = particles[particleRoute[dindex]];
+                Vec2D p1 = particles[particleRoute[penIndex]];
                 Path p = dotPath((int) p1.x, (int) p1.y);
                 for (int i = 0; i < p.size(); i++) {
                     if (i == 0) {
-                        if (!showPath || dindex == 0) {
+                        if (!showPath || penIndex == 0) {
                             com.sendPenUp();
                             com.sendMoveG0(p.getPoint(i).x, p.getPoint(i).y);
                             com.sendPenDown();
@@ -898,7 +827,7 @@
                         com.sendMoveG1(p.getPoint(i).x, p.getPoint(i).y);
                     }
                 }
-                dindex++;
+                penIndex++;
             } else {
                 plotDone();
                 alpha = 255;
@@ -960,7 +889,7 @@
                     strokeWeight(1);
 
                     for (i = 0; i < (particleRouteLength - 1); ++i) {
-                        if (i < dindex)
+                        if (i < penIndex)
                             stroke(255, 0, 0, 255);
                         else
                             stroke(128, 128, 255, alpha);

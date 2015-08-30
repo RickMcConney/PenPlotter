@@ -6,27 +6,22 @@
         int DIR_NW = 4;
         int pixelDir = DIR_NE;
 
-
-
         public void plot() {
-            dindex = 0;
-            plotting = true;
-            plottingStarted();
             pixelDir = DIR_NE;
-            nextPlot();
+            super.plot();
         }
 
-        public void nextPlot() {
-            if (dindex < pixels.size() - 1) // todo skips last pixel
+        public void nextPlot(boolean preview) {
+            if (penIndex < pixels.size() - 1) // todo skips last pixel
             {
                 float da = 0;
                 float db = 0;
 
 
-                PVector p = pixels.get(dindex);
-                PVector r = raw.get(dindex);
-                PVector next = raw.get(dindex + 1);
-                if (dindex == 0) {
+                PVector p = pixels.get(penIndex);
+                PVector r = raw.get(penIndex);
+                PVector next = raw.get(penIndex + 1);
+                if (penIndex == 0) {
                     if (next.y - r.y > 0) // todo no check for one pixel row
                         pixelDir = DIR_SW;
                     else
@@ -37,7 +32,7 @@
                     com.sendPixel(da, db, pixelSize, (int) p.z, pixelDir);
 
                 } else {
-                    PVector last = raw.get(dindex - 1);
+                    PVector last = raw.get(penIndex - 1);
                     da = r.x - last.x;
                     db = r.y - last.y;
                     if (last.x < r.x) // new row
@@ -53,9 +48,9 @@
                 }
 
                 updatePos(p.x + offX, p.y + offY);
-                dindex++;
+                penIndex++;
             } else {
-                com.sendMotorOff();
+                
                 plottingStopped();
             }
         }
@@ -81,12 +76,13 @@
 
         public void draw() {
             for (int i = 0; i < pixels.size(); i++) {
-                if (i < dindex)
+                if (i < penIndex)
                     drawDiamonPixel(i, 255);
                 else
                     drawDiamonPixel(i, alpha);
             }
         }
+        
         public void calculate() {
             PImage image = simage;
             int size = pixelSize;
@@ -160,5 +156,6 @@
                     b += inc;
                 }
             }
+            loaded = true;
         }
     }

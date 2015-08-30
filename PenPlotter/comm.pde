@@ -39,9 +39,11 @@
         try {
             myPort = new Serial(applet, Serial.list()[port], (int) baudRate);
             lastPort = port;
-            //      myTextarea.setVisible(true);
+            println("connected");
+            myPort.write("\n");
         } catch (Exception exp) {
-            println("Failed to open serial port");
+            exp.printStackTrace();
+            println(exp);
         }
     }
 
@@ -137,11 +139,6 @@
         send("M3 X" + da + " Y" + db + " P" + pixelSize + " S" + shade + " E" + pixelDir + "\n");
     }
 
-    public void sendSqPixel(float x, float y, int size, int b) {
-        //todo
-        // send("M2 X"+x+" Y"+y+" P"+size+" S"+b+"\n");
-        updatePos(x, y);
-    }
 
     public void initArduino() {
         sendHome();
@@ -170,12 +167,13 @@
         } else {
 
             if (currentPlot.isPlotting())
-                currentPlot.nextPlot();
+                currentPlot.nextPlot(true);
 
         }
     }
 
     public void send(String msg) {
+
         if (okCount >= 0)
             oksend(msg);
         else
@@ -192,9 +190,11 @@
         }
     }
 
-    public void serialEvent(Serial myPort) {
+    public void serialEvent() {
 
+     
         if (myPort == null || myPort.available() <= 0) return;
+
 
         val = myPort.readStringUntil('\n');
         if (val != null) {
@@ -217,4 +217,6 @@
             }
         }
     }
+    
+    public void export(File file){}
 }

@@ -2,12 +2,8 @@
     ArrayList<PVector> pixels = new ArrayList<PVector>();
     ArrayList<PVector> raw = new ArrayList<PVector>();
 
-    int dindex = 0;
-
-
-
-    int alpha = 255;
-
+    boolean top;
+  
     public void showControls()
     {
         filterDropList.setVisible(true);
@@ -18,24 +14,13 @@
     }
 
 
-    public void clear() {
-        oimg = null;
-        simage = null;
-
+    public void clear() 
+    {
         pixels.clear();
         raw.clear();
-        loaded = false;
-
-        reset();
+        super.clear();
     }
-
-    public void reset() {
-        plotting = false;
-        dindex = 0;
-        plotDone();
-    }
-
-
+   
     public void flipX() {
         if (oimg == null) return;
         int cols = oimg.width;
@@ -121,20 +106,28 @@
         }
     }
 
-    public boolean isLoaded()
-    {
-        return simage != null;
-    }
+
     public void load(String fileName) {
+        
         oimg = loadImage(fileName);
+        int limitWidth;
+        int limitHeight;
 
         if (oimg.width > oimg.height) {
             imageWidth = 200;
             imageHeight = 200 * oimg.height / oimg.width;
+            limitWidth = machineWidth/2;
+            limitHeight = machineWidth/2 * oimg.height / oimg.width;
         } else {
             imageWidth = 200 * oimg.width / oimg.height;
             imageHeight = 200;
+            limitWidth = machineHeight/2 * oimg.width / oimg.height;
+            limitHeight = machineHeight/2;
         }
+        PImage limit = new PImage(limitWidth, limitHeight);
+        limit.copy(oimg, 0,0, oimg.width, oimg.height, 0, 0, limit.width, limit.height);
+        oimg = limit;
+
         cropRight = imageX + imageWidth;
         cropBottom = imageY + imageHeight;
         crop(cropLeft, cropTop, cropRight, cropBottom);
@@ -188,33 +181,28 @@
 
 
 
-
-
-    public void plot() {
-        dindex = 0;
-        plotting = true;
-        plottingStarted();
-        nextPlot();
-    }
-
-    public void nextPlot() {
-        if (dindex < pixels.size()) {
-            PVector p = pixels.get(dindex);
-            if (dindex == 0) {
+    public void nextPlot(boolean preview) {
+        if (penIndex < penPaths.size()) {
+                     
+            Path wave = penPaths.get(penIndex);
+            for(int j = 0;j<wave.size();j++)
+            {                   
+              if (penIndex == 0 && j == 0) {
                 com.sendPenUp();
-                com.sendMoveG0((p.x + offX), (p.y + offY));
+                com.sendMoveG0(wave.getPoint(j).x+ homeX - simage.width / 2 + offX, wave.getPoint(j).y+ homeY + offY);
                 com.sendPenDown();
-                com.sendSqPixel((p.x + offX), (p.y + offY), pixelSize, (int) p.z);
-            } else {
-                com.sendSqPixel((p.x + offX), (p.y + offY), pixelSize, (int) p.z);
+                com.sendMoveG1(wave.getPoint(j).x+ homeX - simage.width / 2 + offX, wave.getPoint(j).y+ homeY + offY);
+              } else {
+                com.sendMoveG1(wave.getPoint(j).x+ homeX - simage.width / 2 + offX, wave.getPoint(j).y+ homeY + offY);
+              }
             }
-            dindex++;
+            if(preview)
+              drawPreview();
+            penIndex++;
         } else {
-            com.sendMotorOff();
             plottingStopped();
         }
     }
-
 
     public void drawSquarePixel(int i, int a) {
         if (i < pixels.size()) {
@@ -226,26 +214,52 @@
         }
     }
 
-    public Path wavePath(float x,float y,float  shade)
+    public Path wavePath(float x,float y,float  shade, boolean reverse)
         {
+            int n  = int(((255-shade) * pixelSize / penWidth) / 255f);
+            float inc = (float)pixelSize/(float)n; 
+     
+            if(reverse) 
+            { 
+              x += pixelSize;  
+              inc = -inc;
+            }    
             Path path = new Path();
-            path.addPoint(x , y);
-            float n  = ((255-shade) * pixelSize / penWidth) / 255;
-            float inc = pixelSize/n;
-            for(float i = 0;i<n;i++) {
+            path.addPoint(x , y+pixelSize/2f);
 
-                path.addPoint(x + i * inc, y+pixelSize);
-                path.addPoint(x + (i+1) * inc, y+pixelSize);
-                path.addPoint(x + (i+1) * inc, y);
+            for(float i = 0;i<n;i++) {
+                if(top)
+                {
+                  path.addPoint(x + i * inc, y+pixelSize);
+                  path.addPoint(x + (i+1) * inc, y+pixelSize);
+                }
+                else
+                {
+                  path.addPoint(x + i * inc, y);
+                  path.addPoint(x + (i+1) * inc, y);
+                }
+                top = !top;
             }
+            if(reverse)
+              x-=pixelSize;
+            else
+              x+=pixelSize;
+              
+            if(top)
+              path.addPoint(x , y);
+            else
+              path.addPoint(x , y+pixelSize);
+              
+             path.addPoint(x , y+pixelSize/2f  );
             return path;
         }
 
         public void drawWavePixel(int i, int a) {
             if (i < pixels.size()) {
                 PVector r = pixels.get(i);
-                Path p = wavePath(r.x,r.y,r.z);
+                Path p = wavePath(r.x+offX,r.y+offY,r.z,false);
                 stroke(color(0,0,0, a));
+                strokeWeight(penWidth);
                 for(int j = 0;j<p.size()-1;j++)
                 {
                     sline(p.getPoint(j).x,p.getPoint(j).y,p.getPoint(j+1).x,p.getPoint(j+1).y);
@@ -253,13 +267,49 @@
             }
         }
 
-        public void draw() {
-            for (int i = 0; i < pixels.size(); i++) {
-                if (i < dindex)
-                    drawWavePixel(i, 255);
-                else
-                    drawWavePixel(i, alpha);
+        public void drawPreview()
+        {
+            if(preview == null)
+            {
+              preview = createGraphics(machineWidth,machineHeight);
+              preview.beginDraw();
+              preview.clear();
+              preview.endDraw();
             }
+            preview.beginDraw();
+            preview.clear();
+            preview.strokeWeight(0.1);
+  
+            preview.stroke(0,0,0,255);
+            preview.beginShape();
+            for (int i = 0; i < penIndex; i++) {
+               Path p = penPaths.get(i);
+               for(int j = 0;j<p.size();j++)
+               {
+                preview.vertex(p.getPoint(j).x , p.getPoint(j).y );
+               }
+            }
+            preview.endShape();
+            
+            preview.stroke(0,0,0,alpha);
+            preview.beginShape();
+            for (int i = penIndex; i < penPaths.size(); i++) {
+               Path p = penPaths.get(i);
+               for(int j = 0;j<p.size();j++)
+               {
+                preview.vertex(p.getPoint(j).x , p.getPoint(j).y );
+               }
+            }
+            preview.endShape();
+            
+            preview.endDraw();
+            loaded = true;
+        }
+        
+        public void draw() {
+            if(preview != null)
+              image(preview, scaleX(offX+ homeX - simage.width / 2), scaleY(offY +homeY), preview.width * zoomScale, preview.height * zoomScale);
+            
         }
 
 
@@ -272,15 +322,18 @@
         int shade;
         pixels.clear();
 
-        int sx = homeX - image.width / 2;
-        int sy = homeY;
+        int sx = 0;
+        int sy = 0;
         boolean reverse = true;
         int skipColor = getBrightness(image, 0, 0, size);
         int skipHue = getHue(image, 0, 0, size);
         int hue;
 
+        penPaths.clear();
+
         for (int y = 0; y < height; y += size) {
             reverse = !reverse;
+            top = true;
             if (!reverse) {
                 for (int x = 0; x < width; x += size) {
                     d = getBrightness(image, x, y, size);
@@ -288,7 +341,8 @@
 
                     if (hue != skipHue || d != skipColor) {
                         shade = (d / range) * range;
-                        pixels.add(new PVector(sx + x, sy + y, shade));
+                       // pixels.add(new PVector(sx + x, sy + y, shade));
+                         penPaths.add(wavePath(sx + x,sy + y,shade,reverse));
                     }
                 }
             } else {
@@ -297,24 +351,17 @@
                     hue = getHue(image, x, y, size);
                     if (hue != skipHue || d != skipColor) {
                         shade = (d / range) * range;
-                        pixels.add(new PVector(sx + x, sy + y, shade));
+                        
+                       // pixels.add(new PVector(sx + x, sy + y, shade));
+                         penPaths.add(wavePath(sx + x,sy + y,shade,reverse));
                     }
                 }
             }
         }
+        drawPreview();
     }
 
-    public void plottingStarted() {
-        plotting = true;
-        alpha = 64;
-    }
 
-    public void plottingStopped() {
-        dindex = 0;
-        plotting = false;
-        plotDone();
-        alpha = 255;
-        goHome();
-    }
+
 
 }

@@ -21,7 +21,11 @@ SortedProperties props = null;
                                            if (returned == JFileChooser.APPROVE_OPTION)
                                            {
                                                File file = fc.getSelectedFile();
-                                               currentPlot.export(file);
+                                               Com oldcom = com;
+                                               com = new Export();
+                                               com.export(file);
+                                               com = oldcom;
+                                              
                                            }
                                        }
                                    }
@@ -71,6 +75,7 @@ SortedProperties props = null;
         }
         catch (Exception e ) {
             e.printStackTrace();
+            println(e);
         }
     }
 

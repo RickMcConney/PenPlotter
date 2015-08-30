@@ -346,6 +346,7 @@ void GCode::readFromSerial()
             }
             sendAsBinary = (commandReceiving[0] & 128)!=0;
         }
+      
         if(sendAsBinary)
         {
             if(commandsReceivingWritePosition < 2 ) continue;

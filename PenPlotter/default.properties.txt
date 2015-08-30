@@ -1,9 +1,9 @@
 #Polar Properties
-#Wed Aug 26 18:33:06 CDT 2015
+#Sun Aug 30 14:39:43 CDT 2015
 cnc.safeHeight=5.0
 com.baudrate=115200
 com.serialPort=1
-image.cropBottom=210
+image.cropBottom=135
 image.cropLeft=130
 image.cropRight=330
 image.cropTop=10
@@ -11,7 +11,7 @@ image.pixelSize=6
 image.scale=1.0
 machine.height=900
 machine.homepoint.y=250
-machine.motors.maxSpeed=1000
+machine.motors.maxSpeed=1010
 machine.motors.mmPerRev=80.0
 machine.motors.stepsPerRev=6400.0
 machine.offX=0
@@ -20,6 +20,6 @@ machine.penSize=0.5
 machine.width=840
 machine.zoomScale=0.7
 svg.UserScale=1.0
-svg.name=C\:\\Users\\Rick\\Documents\\GitHub\\PenPlotter\\PenPlotter\\data\\rick520.jpg
+svg.name=C\:\\Users\\Rick\\Documents\\GitHub\\PenPlotter\\PenPlotter\\data\\rect.svg
 svg.pixelsPerInch=72.0
 svg.shortestSegment=0.0

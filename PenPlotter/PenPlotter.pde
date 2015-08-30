@@ -26,10 +26,19 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
 
-
-
-
-
+import java.awt.event.ActionEvent;
+import java.awt.event.WindowEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowListener;
+import java.awt.event.WindowAdapter;
+import javax.swing.*;
+import java.util.logging.*;
+import java.text.*;
+import java.util.*;
+import java.io.*;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.BorderLayout;
 
     final static String ICON  = "icons/penDown.png";
     final static String TITLE = "PenPlotter v0.6";
@@ -57,7 +66,8 @@ import java.io.IOException;
 
     int speedValue = 500;     // speed of motors controlled with speed slider
 
-    float stepsPerRev = 1600; // number of steps per rev includes microsteps
+
+    float stepsPerRev = 6400; // number of steps per rev includes microsteps
     float mmPerRev = 80;      // mm per rev
 
     float zoomScale = 0.75f;   // screen scale controlle with mouse wheel
@@ -131,7 +141,10 @@ import java.io.IOException;
     int SQUARE = 2;
     int STIPPLE = 3;
     int imageMode = HATCH;
-
+    long lastTime = millis();
+    long freeMemory;
+    long totalMemory;
+    public static Console console;
     Com com = new Com();
 
     private void prepareExitHandler () {
@@ -312,6 +325,8 @@ import java.io.IOException;
             setZoom(zoomScale-=0.1f);
     }
 
+
+
     public void keyPressed() {
         if (key == 'x') {
             flipX *= -1;
@@ -320,8 +335,24 @@ import java.io.IOException;
             flipY *= -1;
             updateScale();
         }
+        
+        if (key == 'c')
+         {
+           println("control");
+           initLogging();
+         }
     }
-
+void initLogging()
+{
+  try
+  {
+      console = new Console();
+  }
+  catch(Exception e)
+  {
+    println("Exception setting up logger: " + e.getMessage());
+  }
+}
     public void handleMoved(String id, int x, int y)
     {
         if (id.equals("homeY"))
@@ -516,6 +547,12 @@ import java.io.IOException;
         drawPaper();
         drawOrigin();
         drawTicks();
+        
+        if (currentPlot.isLoaded())
+        {
+            currentPlot.draw();
+        }
+        
         drawGondola();
 
         for (Handle handle : handles) {
@@ -530,10 +567,7 @@ import java.io.IOException;
             drawSelector();
         }
 
-        if (currentPlot.isLoaded())
-        {
-            currentPlot.draw();
-        }
+
 
         if (jogX != 0)
         {
@@ -543,6 +577,18 @@ import java.io.IOException;
         {
             com.moveDeltaY(jogY);
         }
+        com.serialEvent();
+        
+        if(millis() > lastTime+1000)
+        {
+          
+          freeMemory = Runtime.getRuntime().freeMemory()/1000000;
+          totalMemory = Runtime.getRuntime().totalMemory()/1000000;
+          lastTime = millis();
+        }
+           stroke(0);
+          fill(0);
+          text("Mem "+freeMemory+"/"+totalMemory,50,height-4);
     }
 
     public void drawGondola()

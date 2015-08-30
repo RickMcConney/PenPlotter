@@ -75,11 +75,14 @@
         return s;
     }
 
+
     class myView implements ControllerView<Button> {
 
         public void display(PGraphics theApplet, Button theButton) {
+
+
             theApplet.pushMatrix();
-            if (theButton.isInside()) {
+            if (theButton.isInside() ) {
                 if (theButton.isPressed()) { // button is pressed
                     theApplet.fill(227, 230, 255);
                 } else { // mouse hovers the button
@@ -191,7 +194,7 @@
 
         scaleSlider = addSlider(leftMargin,posY += ySpace+10,"scale", "SCALE", 0.1f, 5, userScale);
 
-        speedSlider = addSlider(leftMargin,posY += ySpace/2,"speedChanged", "SPEED", 100, 2000, 500);
+        speedSlider = addSlider(leftMargin,posY += ySpace/2,"speedChanged", "SPEED", 100, 6000, 500);
         speedSlider.onRelease(speedrelease)
                 .onReleaseOutside(speedrelease);
 
@@ -323,6 +326,7 @@
 
                 hideImageControls();
                 currentPlot.showControls();
+                currentPlot.reset();
                 currentPlot.calculate();
             }
         }
@@ -369,7 +373,7 @@
         if (b.getCaptionLabel().getText().contains("Step")) {
 
             if (currentPlot.isPlotting())
-                currentPlot.nextPlot();
+                currentPlot.nextPlot(true);
             else
             {
                 b.setCaptionLabel("Plot");
@@ -461,7 +465,8 @@
 
     public void export()
     {
-        exportGcode();
+        if(currentPlot.isLoaded())
+          exportGcode();
     }
 
     public void speedChanged(int speed)

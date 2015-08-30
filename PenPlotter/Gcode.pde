@@ -13,21 +13,13 @@
         final int BLUE = 2;
 
         Path gcodePath = null;
-        ArrayList<Path> gcodePaths;
         int gcodeIndex = 0;
 
 
 
         public void clear() {
             gcodeData = null;
-            gcodePaths = null;
-            loaded = false;
-            reset();
-        }
-
-        public void reset() {
-            plotting = false;
-            plotDone();
+            super.clear();
         }
 
         public void load(String fileName) {
@@ -37,15 +29,16 @@
             lastZ = 0;
             try {
                 gcodeData = getStringFromFile(fileName);
-                gcodePaths = new ArrayList<Path>();
+                penPaths = new ArrayList<Path>();
                 renderData(gcodeData);
+                drawPreview();
             } catch (Exception e) {
                 println(e);
                 e.printStackTrace();
             }
-            println("Loaded " + gcodePaths.size() + " Paths");
+            println("Loaded " + penPaths.size() + " Paths");
 
-            loaded = true;
+
         }
 
         public ArrayList<String> convertStreamToArray(InputStream is) throws Exception {
@@ -282,7 +275,7 @@
 
             if (c == BLUE || gcodePath == null) {
                 gcodePath = new Path();
-                gcodePaths.add(gcodePath);
+                penPaths.add(gcodePath);
             }
 
             gcodePath.addPoint(x, y);
@@ -290,9 +283,9 @@
         }
 
         public void rotate() {
-            if (gcodePaths == null) return;
+            if (penPaths == null) return;
 
-            for (Path p : gcodePaths) {
+            for (Path p : penPaths) {
                 for (int j = 0; j < p.size(); j++) {
                     float x = p.getPoint(j).x;
                     float y = p.getPoint(j).y;
@@ -302,12 +295,69 @@
                 }
             }
         }
+        
+        public void drawPreview()
+        {
+          if(preview == null)
+            {
+              preview = createGraphics(machineWidth,machineHeight);
+              preview.beginDraw();
+              preview.clear();
+              preview.endDraw();
+            }
+            preview.beginDraw();
+            preview.clear();
+            preview.strokeWeight(0.1);
+            preview.noFill();
+            preview.beginShape();           
+            for (int i = 0; i < gcodeIndex; i++) {
+               Path p = penPaths.get(i);
 
+
+               preview.stroke(0, 0, 255,255);         
+               for(int j = 0;j<p.size();j++)
+               {                
+                 preview.vertex(p.getPoint(j).x*userScale * flipX , p.getPoint(j).y*userScale * flipY );
+               }
+
+            }
+            preview.endShape(); 
+            
+            preview.beginShape();           
+            for (int i = gcodeIndex; i < penPaths.size(); i++) {
+               Path p = penPaths.get(i);
+               preview.beginShape(); 
+
+               preview.stroke(0, 255, 0,alpha); 
+               
+               preview.vertex(p.getPoint(0).x*userScale * flipX , p.getPoint(0).y*userScale * flipY ); 
+               if(p.size()> 1)
+                preview.vertex(p.getPoint(1).x*userScale * flipX , p.getPoint(1).y*userScale * flipY ); 
+               preview.endShape(); 
+               preview.beginShape();  
+               preview.stroke(255, 0, 0,alpha);     
+               for(int j = 0;j<p.size();j++)
+               {                
+                 preview.vertex(p.getPoint(j).x*userScale * flipX , p.getPoint(j).y*userScale * flipY );
+               }
+               preview.endShape(); 
+            }
+            preview.endShape(); 
+            
+            preview.endDraw();
+            loaded = true;
+        }
+        
+        public void imgdraw() {
+            if(preview != null)
+              image(preview, scaleX(offX+ homeX), scaleY(offY +homeY), preview.width * zoomScale, preview.height * zoomScale);
+            
+        }
         public void draw() {
             float lastX = -offX / (userScale * flipX);
             float lastY = -offY / (userScale * flipY);
             RPoint cur;
-            for (Path p : gcodePaths) {
+            for (Path p : penPaths) {
                 for (int j = 0; j < p.size(); j++) {
                     if (j == 0)
                         stroke(0, 255, 0);
@@ -325,15 +375,13 @@
 
         public void plot() {
             gcodeIndex = 0;
-            plotting = true;
             lastX = 0;
             lastY = 0;
             lastZ = 0;
-            com.sendSpeed(speedValue);
-            nextPlot();
+            super.plot();
         }
 
-        public void nextPlot() {
+        public void nextPlot(boolean preview) {
 
             String cmd = "";
             float x = lastX;
@@ -348,13 +396,7 @@
 
             while (!sent) {
                 if (gcodeIndex >= gcodeData.size()) {
-                    plotting = false;
-                    plotDone();
-                    com.sendPenUp();
-                    com.sendMoveG0(homeX, homeY);
-                    com.sendMotorOff();
-
-
+                    plottingStopped();
                     return;
                 }
                 if (gcodeData.get(gcodeIndex).startsWith("(")) {
@@ -418,6 +460,8 @@
                     lastY = y;
                     lastZ = z;
                 }
+               // if(preview)
+               //   drawPreview();
                 gcodeIndex++;
             }
         }
