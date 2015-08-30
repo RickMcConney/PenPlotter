@@ -33,16 +33,17 @@ Next I wrote a simpler version of the controller that speaks gcode and uses mm u
   - The optimizer will remove very short lines in a path
   - Svg files can be scaled and rotated by multiples of 90 degrees
   - Svg files can be flipped about the X or Y axis
-  - Export svg file to gcode
 - Supports Image files (.jpg, .png, .tga, .gif)
   - The image preview shows how the pixel size and pen width will affect the plot.
   - Images can be cropped, scaled and rotated by multiples of 90 degrees
   - Images can be flipped about the X or Y axis
   - Four image styles are supported
     - Hatch: a cross hatch style similar to blackstripes
-    - Daimond: Diamond shaped pixels similar to the original poloar graph
+    - Diamond: Diamond shaped pixels similar to the original poloar graph
     - Square: Simple square wave pixes. 
-    - Stipple: Stippled similar to stipplegen.
+    - Stipple: Stippled similar to stipplegen program.
+- Export
+  - All formats (except Diamond) can be exported to standard gcode files.
 - The controller runs in processing 2 or processing 3
 
 #Compiling
