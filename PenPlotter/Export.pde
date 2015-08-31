@@ -1,6 +1,28 @@
 class Export extends Com
 {
   BufferedWriter writer;
+  boolean cnc;
+  float originX;
+  float originY;
+  
+  public Export(String ext)
+  {
+    if(".cnc".equals(ext))
+    {
+      cnc = true;
+      originX = homeX;
+      originY = homeY;
+    }
+    else
+    {
+      cnc = false;
+      originX = 0;
+      originY = 0;
+    }
+  }
+  
+  
+  
   public void listPorts() {}
 
     public void disconnect() {}
@@ -13,27 +35,27 @@ class Export extends Com
     public void sendMotorOff() {}
 
     public void moveDeltaX(float x) {
-        send("G0 X" + (x-homeX) + "\n");
+        send("G0 X" + (x-originX) + "\n");
     }
 
     public void moveDeltaY(float y) {
-        send("G0 Y" + (y-homeY) + "\n");
+        send("G0 Y" + (y-originY) + "\n");
     }
 
     public void sendMoveG0(float x, float y) {
-        send("G0 X" + (x-homeX) + " Y" + (y-homeY) + "\n");
+        send("G0 X" + (x-originX) + " Y" + (y-originY) + "\n");
     }
 
     public void sendMoveG1(float x, float y) {
-        send("G1 X" + (x-homeX) + " Y" + (y-homeY) + "\n");
+        send("G1 X" + (x-originX) + " Y" + (y-originY) + "\n");
     }
 
     public void sendG2(float x, float y, float i, float j) {
-        send("G2 X" + (x-homeX) + " Y" + (y-homeY) + " I" + i + " J" + j + "\n");
+        send("G2 X" + (x-originX) + " Y" + (y-originY) + " I" + i + " J" + j + "\n");
     }
 
     public void sendG3(float x, float y, float i, float j) {
-        send("G3 X" + (x-homeX) + " Y" + (y-homeY) + " I" + i + " J" + j + "\n");
+        send("G3 X" + (x-originX) + " Y" + (y-originY) + " I" + i + " J" + j + "\n");
     }
 
     public void sendSpeed(int speed) {
@@ -51,11 +73,25 @@ class Export extends Com
     public void sendSpecs() {}
 
     public void sendPenUp() {
-        send("G0 Z"+cncSafeHeight+"\n");
+        if(cnc)
+          send("G0 Z"+cncSafeHeight+"\n");
+        else
+        {
+          send("G4 P"+servoDwell+"\n");
+          send("M340 P3 S"+servoUpValue+"\n");
+          send("G4 P"+servoDwell+"\n");
+        }
     }
 
     public void sendPenDown() {
+      if(cnc)
         send("G0 Z0\n");
+      else
+      {
+        send("G4 P"+servoDwell+"\n");
+        send("M340 P3 S"+servoDownValue+"\n");
+        send("G4 P"+servoDwell+"\n");
+      }
     }
 
     public void sendAbsolute() {
@@ -64,6 +100,11 @@ class Export extends Com
 
     public void sendRelative() {
         send("G91\n");
+    }
+    
+    public void sendMM()
+    {
+      send("G21\n");
     }
 
     public void sendPixel(float da, float db, int pixelSize, int shade, int pixelDir) {}
@@ -94,10 +135,7 @@ class Export extends Com
     public void export(File file)
     {
           try {
-               writer = new BufferedWriter(new FileWriter(file));
-                writer.write("G21\n"); //mm
-                writer.write("G90\n"); // absolute
-                
+               writer = new BufferedWriter(new FileWriter(file));               
                 currentPlot.plot();
                 while(currentPlot.isPlotting())
                   currentPlot.nextPlot(false);

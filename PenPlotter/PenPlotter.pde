@@ -21,6 +21,9 @@ import toxi.geom.mesh2d.*;
 import toxi.processing.*;
 import java.util.ArrayList;
 import java.io.File;
+import javax.swing.filechooser.FileFilter;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeEvent;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -41,7 +44,7 @@ import java.awt.Toolkit;
 import java.awt.BorderLayout;
 
     final static String ICON  = "icons/penDown.png";
-    final static String TITLE = "PenPlotter v0.6";
+    final static String TITLE = "PenPlotter v0.7";
 
     ControlP5 cp5;
     Handle[] handles;
@@ -144,6 +147,9 @@ import java.awt.BorderLayout;
     long lastTime = millis();
     long freeMemory;
     long totalMemory;
+    int servoDwell = 250;
+    int servoUpValue = 2350;
+    int servoDownValue = 1500;
     public static Console console;
     Com com = new Com();
 
@@ -251,7 +257,11 @@ import java.awt.BorderLayout;
 
         userScale = Float.parseFloat(props.getProperty("svg.UserScale"));
         scaleSlider.setValue(userScale);
-
+        
+        servoDwell = Integer.parseInt(props.getProperty("servo.dwell"));
+        servoUpValue = Integer.parseInt(props.getProperty("servo.upValue"));
+        servoDownValue = Integer.parseInt(props.getProperty("servo.downValue"));
+                
         updateScale();
 
         handles = new Handle[4];

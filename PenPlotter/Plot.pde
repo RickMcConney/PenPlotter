@@ -51,6 +51,8 @@ class Plot {
           plotting = true;
           penIndex = 0;
           alpha = 64;
+          com.sendMM();
+          com.sendAbsolute();
           com.sendSpeed(speedValue);
           nextPlot(true);
         }

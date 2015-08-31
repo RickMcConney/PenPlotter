@@ -130,9 +130,15 @@
     public void sendAbsolute() {
         send("G90\n");
     }
+    
 
     public void sendRelative() {
         send("G91\n");
+    }
+    
+    public void sendMM()
+    {
+      send("G21\n");
     }
 
     public void sendPixel(float da, float db, int pixelSize, int shade, int pixelDir) {

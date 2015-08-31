@@ -62,11 +62,7 @@
                 return;
             }
 
-            if (svgPathIndex == 0 && svgLineIndex == 0) // first line
-            {
-                com.sendAbsolute();
-                com.sendSpeed(speedValue);
-            }
+
             if (svgPathIndex < penPaths.size()) {
                 if (svgLineIndex < penPaths.get(svgPathIndex).size() - 1) {
 
@@ -107,10 +103,10 @@
 
         public void plot() {
             if (sh != null) {
-                plotting = true;
+                
                 svgPathIndex = 0;
                 svgLineIndex = 0;
-                nextPlot(true);
+                super.plot();
             }
         }
 

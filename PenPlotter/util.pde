@@ -1,32 +1,146 @@
 SortedProperties props = null;
+
+JFileChooser fc;
+
      String propertiesFilename = "default.properties.txt";
 
+   
+    
+ class MyExtensionFileFilter extends FileFilter
+ {
+   String description;
+   String ext;
+   
+    public MyExtensionFileFilter(String description,String ext)
+    {
+      this.description = description;
+      this.ext = ext;
+    }
+    public String getDescription() {
+      return description;
+    }
+     
+    public boolean accept(File f) {
+      if (f.isDirectory()) {
+      return true;
+      } else {
+      return f.getName().toLowerCase().endsWith(ext);
+      }
+    }
+    public String getExtension()
+    {
+      return ext;
+    }
+ }
+                                        
+    public class MyFileChooser extends JFileChooser {
+    private File file = new File("");
+    private String name;
+    
+    public String getName()
+    {
+      return name;
+    }
+    
+    
+
+    public MyFileChooser(String name) {
+        this.name = name;
+        addPropertyChangeListener(JFileChooser.FILE_FILTER_CHANGED_PROPERTY, new PropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent e) {
+              String filename = MyFileChooser.this.getName();
+               if(MyFileChooser.this.getSelectedFile() != null)
+               {
+                 filename = MyFileChooser.this.getSelectedFile().getName();
+               }
+                String extnew = null;
+  
+                if (e.getNewValue() == null || !(e.getNewValue() instanceof MyExtensionFileFilter)) {
+                    return;
+                }
+
+                MyExtensionFileFilter newValue = ((MyExtensionFileFilter) e.getNewValue());
+                extnew = newValue.getExtension();
+              
+                String name = filename;
+                 int dot = filename.indexOf('.');
+                 if (dot > 0)
+                     name = filename.substring(0, dot);
+                name+=extnew;
+                setSelectedFile(new File(name));
+            }
+        });
+    }
+
+    @Override
+    public void setSelectedFile(File file) {
+        super.setSelectedFile(file);
+        if(getDialogType() == SAVE_DIALOG) {
+            if(file != null) {
+                super.setSelectedFile(file);
+                this.file = file;
+            }
+        }
+    }
+
+    @Override
+    public void approveSelection() { 
+        if(getDialogType() == SAVE_DIALOG) {
+            File f = getSelectedFile();  
+            if (f.exists()) {  
+                String msg = "Replace File?";  
+                msg = MessageFormat.format(msg, new Object[] { f.getName() });  
+                int option = JOptionPane.showConfirmDialog(this, msg, "", JOptionPane.YES_NO_OPTION);
+                if (option == JOptionPane.NO_OPTION ) {  
+                    return;  
+                }
+            }
+            if(getFileFilter() instanceof MyExtensionFileFilter)
+            {
+               String ext = ((MyExtensionFileFilter)getFileFilter()).getExtension();
+               Com oldcom = com;
+               com = new Export(ext);
+               com.export(f);
+               com = oldcom;
+            }
+            else
+            {
+            }
+        }
+        super.approveSelection();   
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
+        if(!visible) {
+            resetChoosableFileFilters();
+        }
+    }
+}
+
+    
     public void exportGcode()
     {
         SwingUtilities.invokeLater(new Runnable()
                                    {
                                        public void run() {
-                                           JFileChooser fc = new JFileChooser();
-                                           if (currentFileName != null)
-                                           {
-                                               String name = currentFileName;
+                                         String name = currentFileName;
                                                int dot = currentFileName.indexOf('.');
                                                if (dot > 0)
                                                    name = currentFileName.substring(0, dot)+".gcode";
+                                           fc = new MyFileChooser(name);
+                                           if (currentFileName != null)
+                                           {
                                                fc.setSelectedFile(new File(name));
                                            }
                                            fc.setDialogTitle("Export file...");
+                                           fc.setAcceptAllFileFilterUsed(false);
+                                           fc.addChoosableFileFilter(new MyExtensionFileFilter("PEN Plotter gcode",".gcode"));
+                                           fc.addChoosableFileFilter(new MyExtensionFileFilter("CNC gcode",".cnc"));
+                                           
+                                           fc.showSaveDialog(frame);
 
-                                           int returned = fc.showSaveDialog(frame);
-                                           if (returned == JFileChooser.APPROVE_OPTION)
-                                           {
-                                               File file = fc.getSelectedFile();
-                                               Com oldcom = com;
-                                               com = new Export();
-                                               com.export(file);
-                                               com = oldcom;
-                                              
-                                           }
                                        }
                                    }
         );
@@ -65,6 +179,10 @@ SortedProperties props = null;
             props.setProperty("image.cropTop",""+cropTop);
             props.setProperty("image.cropBottom",""+cropBottom);
             props.setProperty("cnc.safeHeight",""+cncSafeHeight);
+            props.setProperty("servo.dwell",""+servoDwell);
+            props.setProperty("servo.upValue",""+servoUpValue);
+            props.setProperty("servo.downValue",""+servoDownValue);
+            
 
             String fileToSave = sketchPath(propertiesFilename);
             File f = new File(fileToSave);
