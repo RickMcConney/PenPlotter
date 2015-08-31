@@ -95,17 +95,17 @@ JFileChooser fc;
                     return;  
                 }
             }
+            String ext = ".gcode";
             if(getFileFilter() instanceof MyExtensionFileFilter)
             {
-               String ext = ((MyExtensionFileFilter)getFileFilter()).getExtension();
-               Com oldcom = com;
-               com = new Export(ext);
-               com.export(f);
-               com = oldcom;
+               ext = ((MyExtensionFileFilter)getFileFilter()).getExtension();
             }
-            else
-            {
-            }
+            println("export "+ext);
+            Com oldcom = com;
+            com = new Export(ext);
+            com.export(f);
+            com = oldcom;
+
         }
         super.approveSelection();   
     }

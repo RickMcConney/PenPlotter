@@ -62,7 +62,10 @@ class Export extends Com
         send("G0 F" + speed + "\n");
     }
 
-    public void sendHome() {}
+    public void sendHome() {
+      if(!cnc)
+        send("M1 Y" + homeY + "\n");
+  }
 
     public void sendSpeed() {
         send("G0 F" + speedValue + "\n");
@@ -70,7 +73,11 @@ class Export extends Com
 
     public void sendPenWidth() {}
 
-    public void sendSpecs() {}
+    public void sendSpecs() {
+      if(!cnc)
+        send("M4 X" + machineWidth + " E" + penWidth + " S" + stepsPerRev + " P" + mmPerRev + "\n");
+
+    }
 
     public void sendPenUp() {
         if(cnc)
@@ -135,8 +142,10 @@ class Export extends Com
     public void export(File file)
     {
           try {
-               writer = new BufferedWriter(new FileWriter(file));               
+               writer = new BufferedWriter(new FileWriter(file));  
+                             
                 currentPlot.plot();
+                
                 while(currentPlot.isPlotting())
                   currentPlot.nextPlot(false);
                         
