@@ -84,7 +84,8 @@ Here are some screen shots of the controler.
 
 ![Svg Plot](/ScreenShots/svgScreenShot.png?raw=true)
 
-
-![Png Plot](/ScreenShots/pngScreenShot.png?raw=true)
-
 ![Hatch Plot](/ScreenShots/hatch.png?raw=true)
+
+![Stipple Plot](/ScreenShots/stipple.png?raw=true)
+
+
