@@ -143,7 +143,9 @@ class Export extends Com
     {
           try {
                writer = new BufferedWriter(new FileWriter(file));  
-                             
+               writer.write("(file:"+currentFileName+")\n"); 
+               writer.write("("+currentPlot.toString()+")\n"); 
+               writer.write("(homeX:"+homeX+", homeY:"+homeY+", offX:"+offX+", offY:"+offY+")\n");            
                 currentPlot.plot();
                 
                 while(currentPlot.isPlotting())

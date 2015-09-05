@@ -77,6 +77,11 @@
         Slider dotRangeSlider;
         Slider whiteSlider;
 
+    public String toString()
+    {
+      return "type:STIPPLE, minDot:"+MinDotSize+", dotRange:"+DotSizeFactor+", whiteCutoff:"+cutoff+", showPath:"+showPath;
+    }
+    
         public void load() {
 
             int tempx = 0;
@@ -807,7 +812,11 @@
                 rect(scaleX(x - dotSize / 2 + homeX - simage.width / 2 + offX + i * w), scaleY(y - dotSize / 2 + homeY + offY + i * w), zoomScale * (dotSize - (i * w * 2)), zoomScale * (dotSize - (i * w * 2)));
             }
         }
-
+        String progress()
+        {
+          
+          return penIndex+"/"+particleRouteLength;
+        }
         public void nextPlot(boolean preview) {
             if (penIndex < particleRoute.length) {
 

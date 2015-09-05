@@ -7,6 +7,10 @@ class Plot {
         ArrayList<Path> penPaths = new ArrayList<Path>();
         PGraphics preview = null;
         
+        String progress()
+        {
+          return penIndex+"/"+penPaths.size();
+        }
         void init(){}
         void showControls() {}
         void hideControls() {}

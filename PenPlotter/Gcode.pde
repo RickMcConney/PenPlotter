@@ -15,7 +15,10 @@
         Path gcodePath = null;
         int gcodeIndex = 0;
 
-
+        public String toString()
+        {
+          return "type:GCODE";
+        }
 
         public void clear() {
             gcodeData = null;
@@ -373,6 +376,10 @@
             sline(lastX * userScale * flipX + offX + homeX, lastY * userScale * flipY + offY + homeY, homeX, homeY);
         }
 
+        String progress()
+        {
+          return gcodeIndex+"/"+gcodeData.size();
+        }
         public void plot() {
             gcodeIndex = 0;
             lastX = 0;

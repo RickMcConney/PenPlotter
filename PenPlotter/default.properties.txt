@@ -1,9 +1,9 @@
 #Polar Properties
-#Mon Aug 31 09:08:27 CDT 2015
+#Sat Sep 05 11:41:36 CDT 2015
 cnc.safeHeight=5.0
 com.baudrate=115200
 com.serialPort=1
-image.cropBottom=135
+image.cropBottom=186
 image.cropLeft=130
 image.cropRight=330
 image.cropTop=10
@@ -19,10 +19,12 @@ machine.offY=0
 machine.penSize=0.5
 machine.width=840
 machine.zoomScale=0.7
+paper.height.inches=11.0
+paper.width.inches=8.5
+servo.downValue=1500
 servo.dwell=250
 servo.upValue=2350
-servo.downValue=1500
 svg.UserScale=1.0
-svg.name=/Users/rick/Desktop/p2/data/rect.svg
+svg.name=C\:\\Users\\Rick\\Documents\\GitHub\\PenPlotter\\PenPlotter\\data\\grace.jpg
 svg.pixelsPerInch=72.0
 svg.shortestSegment=0.0

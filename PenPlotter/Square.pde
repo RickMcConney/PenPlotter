@@ -3,6 +3,11 @@
     ArrayList<PVector> raw = new ArrayList<PVector>();
 
     boolean top;
+    
+    public String toString()
+    {
+      return "type:SQUARE, pixelSize:"+pixelSize+", penWidth:"+penWidth;
+    }
   
     public void showControls()
     {

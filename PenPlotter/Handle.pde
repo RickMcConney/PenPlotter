@@ -91,10 +91,12 @@
 
         public void display() {
 
-            fill(255);
+            noFill();
             stroke(0);
+            strokeWeight(0.1);
             rect(boxx, boxy, size, size);
             if (over || press) {
+                strokeWeight(1);
                 fill(textColor);
 
                 rect(boxx, boxy, size, size);
@@ -102,7 +104,12 @@
                 int offx = 20;
                 if (x > homeX)
                     offx = -40;
-                if (followsX && followsY)
+                if(id.equals("pWidth"))
+                  text("Width "+nf((x-homeX)*2/25.4,0,1), boxx, boxy-10);
+                else if(id.equals("pHeight"))
+                  text("Height "+nf((y-homeY)/25.4,0,1), boxx+offx, boxy);
+                  
+                else if (followsX && followsY)
                     text("X "+(int)x+" Y "+(int)y, boxx-30, boxy+30);
                 else if (followsX)
                     text("X "+(int)x, boxx+offx, boxy);

@@ -4,7 +4,10 @@
         int svgPathIndex = -1;        // curent path that is plotting
         int svgLineIndex = -1;        // current line within path that is plotting
 
-
+        public String toString()
+        {
+          return "type:SVG";
+        }
 
         public void clear() {
             sh = null;
@@ -54,7 +57,13 @@
                 }
             }
         }
-
+        String progress()
+        {
+          if( svgPathIndex > 0)
+            return svgPathIndex+"/"+penPaths.size();
+          else
+            return "0/"+penPaths.size();
+        }
         public void nextPlot(boolean preview) {
             if (svgPathIndex < 0) {
                 plotting= false;

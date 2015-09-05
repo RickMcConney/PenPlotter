@@ -1,5 +1,11 @@
  class HatchPlot extends SquarePlot
     {
+      
+    public String toString()
+    {
+      return "type:HATCH, pixelSize:"+pixelSize+", t1:"+t1Slider.getValue()+
+      ", t2:"+t2Slider.getValue()+", t3:"+t3Slider.getValue()+", t4:"+t4Slider.getValue();
+    }
         public void showControls()
         {
             filterDropList.setVisible(true);

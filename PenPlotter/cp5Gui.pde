@@ -124,7 +124,7 @@
     {
 
         cp5 = new ControlP5(this);
-        cp5.addFrameRate().setInterval(10).setPosition(0,height - 10).setColorValue(color(0));
+      //  cp5.addFrameRate().setInterval(10).setPosition(0,height - 10).setColorValue(color(0));
         penUpImg= loadImage("icons/penUp.png");
         penDownImg= loadImage("icons/penDown.png");
         loadImg= loadImage("icons/load.png");

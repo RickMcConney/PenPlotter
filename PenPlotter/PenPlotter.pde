@@ -44,7 +44,7 @@ import java.awt.Toolkit;
 import java.awt.BorderLayout;
 
     final static String ICON  = "icons/penDown.png";
-    final static String TITLE = "PenPlotter v0.7";
+    final static String TITLE = "PenPlotter v0.8";
 
     ControlP5 cp5;
     Handle[] handles;
@@ -150,6 +150,11 @@ import java.awt.BorderLayout;
     int servoDwell = 250;
     int servoUpValue = 2350;
     int servoDownValue = 1500;
+    int rate;
+    int tick;
+    
+    float paperWidth = 8.5;
+    float paperHeight = 11;
     public static Console console;
     Com com = new Com();
 
@@ -261,15 +266,19 @@ import java.awt.BorderLayout;
         servoDwell = Integer.parseInt(props.getProperty("servo.dwell"));
         servoUpValue = Integer.parseInt(props.getProperty("servo.upValue"));
         servoDownValue = Integer.parseInt(props.getProperty("servo.downValue"));
-                
+        
+        paperWidth = Float.parseFloat(props.getProperty("paper.width.inches"));
+        paperHeight = Float.parseFloat(props.getProperty("paper.height.inches"));
+        
         updateScale();
 
-        handles = new Handle[4];
+        handles = new Handle[6];
         handles[0] = new Handle("homeY", 0, homeY, 0, 10, handles, false, true, 128);
         handles[1] = new Handle("mWidth", machineWidth, machineHeight/2, 0, 10, handles, true, false, 64);
         handles[2] = new Handle("mHeight", homeX, machineHeight, 0, 10, handles, false, true, 64);
         handles[3] = new Handle("gondola", (int)currentX, (int)currentY, 0, 10, handles, true, true, 2);
-
+        handles[4] = new Handle("pWidth", Math.round(homeX+(paperWidth/2)*25.4), Math.round(homeY+(paperHeight/2)*25.4f), 0, 10, handles, true, false, 64);
+        handles[5] = new Handle("pHeight", homeX, Math.round(homeY+(paperHeight)*25.4), 0, 10, handles, false, true, 64);
     }
 
     public void mousePressed()
@@ -384,6 +393,14 @@ void initLogging()
             handles[1].y = y / 2;
            // makeHatchImage();
         }
+        else if(id.equals("pWidth"))
+        {
+          paperWidth = (x-homeX)*2/25.4;
+        }
+        else if(id.equals("pHeight"))
+        {
+          paperHeight = (y-homeY)/25.4;
+        }
     }
 
     public boolean overCropLeft(int x, int y)
@@ -392,7 +409,7 @@ void initLogging()
 
         int x1 = cropLeft;
         int x2 = x1+10;
-        int y1 = cropTop+(cropBottom-cropTop)/2;
+        int y1 = cropTop+(cropBottom-cropTop)/2-5;
         int y2 = y1+10;
 
         if (x < x1) return false;
@@ -410,7 +427,7 @@ void initLogging()
 
         int x1 = cropRight-10;
         int x2 = x1+10;
-        int y1 = cropTop+(cropBottom-cropTop)/2;
+        int y1 = cropTop+(cropBottom-cropTop)/2-5;
         int y2 = y1+10;
 
         if (x < x1) return false;
@@ -557,6 +574,10 @@ void initLogging()
         drawPaper();
         drawOrigin();
         drawTicks();
+        for (Handle handle : handles) {
+            handle.update();
+            handle.display();
+        }
         
         if (currentPlot.isLoaded())
         {
@@ -565,10 +586,7 @@ void initLogging()
         
         drawGondola();
 
-        for (Handle handle : handles) {
-            handle.update();
-            handle.display();
-        }
+
 
         if (oimg != null)
         {
@@ -588,17 +606,25 @@ void initLogging()
             com.moveDeltaY(jogY);
         }
         com.serialEvent();
-        
+        tick++;
         if(millis() > lastTime+1000)
         {
-          
+          rate = tick;
+          tick = 0;
           freeMemory = Runtime.getRuntime().freeMemory()/1000000;
           totalMemory = Runtime.getRuntime().totalMemory()/1000000;
           lastTime = millis();
         }
-           stroke(0);
-          fill(0);
-          text("Mem "+freeMemory+"/"+totalMemory,50,height-4);
+        stroke(0);
+        fill(0);
+        text("FPS: "+nf(rate,2,0) +"  Mem: "+freeMemory+"/"+totalMemory+"M",10,height-4);
+        String status = " Size: "+machineWidth+"x"+machineHeight +" Zoom: "+nf(zoomScale, 0, 2);
+        status += " X: "+nf(currentX, 0, 2)+" Y: "+nf(currentY, 0, 2);
+        status += " A: "+nf(getMachineA(currentX, currentY), 0, 2);
+        status += " B: "+nf(getMachineB(currentX, currentY), 0, 2);
+        if(currentPlot.isLoaded())
+          status += " Plot: "+currentPlot.progress();
+        text(status, 150, height-4);
     }
 
     public void drawGondola()
@@ -623,12 +649,7 @@ void initLogging()
         strokeWeight(2);
         fill(pageColor);
         rect(scaleX(0), scaleY(0), machineWidth*zoomScale, machineHeight*zoomScale);
-        fill(textColor);
-        String status = ""+machineWidth+" X "+machineHeight +" "+nf(zoomScale, 0, 2);
-        status += " X "+nf(currentX, 0, 2)+" Y "+nf(currentY, 0, 2);
-        status += " A "+nf(getMachineA(currentX, currentY), 0, 2);
-        status += " B "+nf(getMachineB(currentX, currentY), 0, 2);
-        text(status, scaleX(homeX - textWidth(status) / 2), scaleY(0) + 15);
+
     }
 
     public void drawPaper()
@@ -636,14 +657,11 @@ void initLogging()
         noFill();
         stroke(gridColor);
         strokeWeight(0.4f);
-        float pWidth = 8.5f*25.4f;
-        float pHeight = 11*25.4f;
+        float pWidth = paperWidth*25.4f;
+        float pHeight = paperHeight*25.4f;
         rect(scaleX(homeX - pWidth / 2), scaleY(homeY), pWidth * zoomScale, pHeight * zoomScale);
         rect(scaleX(homeX - pHeight / 2), scaleY(homeY), pHeight * zoomScale, pWidth * zoomScale);
-        strokeWeight(0.4f);
-        pWidth = 18*25.4f;
-        pHeight = 24*25.4f;
-        rect(scaleX(homeX-pWidth/2), scaleY(homeY), pWidth*zoomScale, pHeight*zoomScale);
+
     }
 
     public void drawImageFrame()
@@ -665,6 +683,9 @@ void initLogging()
     {
         if (overCropLeft(startX, startY))
         {
+          fill(selectColor);
+          stroke(selectColor);
+          rect(cropLeft, cropTop+(cropBottom-cropTop)/2-5, 10, 10);
             cropLeft = mouseX;
             if (cropLeft < imageX)
                 cropLeft = imageX;
@@ -672,6 +693,10 @@ void initLogging()
                 cropLeft = cropRight-20;
         } else if (overCropRight(startX, startY))
         {
+          fill(selectColor);
+          stroke(selectColor);
+          rect(cropRight-10, cropTop+(cropBottom-cropTop)/2-5, 10, 10);
+          
             cropRight = mouseX;
             if (cropRight < imageX+20)
                 cropRight = imageX+20;
@@ -679,6 +704,9 @@ void initLogging()
                 cropRight = imageX+imageWidth;
         } else if (overCropTop(startX, startY))
         {
+          fill(selectColor);
+          stroke(selectColor);
+          rect(cropLeft+(cropRight-cropLeft)/2-5, cropTop, 10, 10);
             cropTop = mouseY;
             if (cropTop < imageY)
                 cropTop = imageY;
@@ -686,6 +714,9 @@ void initLogging()
                 cropTop = imageY+imageHeight-20;
         } else if (overCropBottom(startX, startY))
         {
+          fill(selectColor);
+          stroke(selectColor);
+          rect(cropLeft+(cropRight-cropLeft)/2-5, cropBottom-10, 10, 10);
             cropBottom = mouseY;
             if (cropBottom < imageY-20)
                 cropBottom = imageY-20;

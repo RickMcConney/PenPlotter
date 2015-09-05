@@ -182,6 +182,8 @@ JFileChooser fc;
             props.setProperty("servo.dwell",""+servoDwell);
             props.setProperty("servo.upValue",""+servoUpValue);
             props.setProperty("servo.downValue",""+servoDownValue);
+            props.setProperty("paper.width.inches",""+nf(paperWidth,0,1));
+            props.setProperty("paper.height.inches",""+nf(paperHeight,0,1));
             
 
             String fileToSave = sketchPath(propertiesFilename);

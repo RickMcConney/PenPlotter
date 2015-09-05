@@ -6,11 +6,21 @@
         int DIR_NW = 4;
         int pixelDir = DIR_NE;
 
+
+    public String toString()
+    {
+      return "type:DIAMOND, pixelSize:"+pixelSize+", penWidth:"+penWidth;
+    }
+    
         public void plot() {
             pixelDir = DIR_NE;
             super.plot();
         }
 
+        String progress()
+        {
+          return penIndex+"/"+pixels.size();
+        }
         public void nextPlot(boolean preview) {
             if (penIndex < pixels.size() - 1) // todo skips last pixel
             {

@@ -1,12 +1,14 @@
  class Com {
     Serial myPort;  //the Serial port object
     String val;
+    String lastCmd;
     ArrayList<String> buf = new ArrayList<String>();
 
     ArrayList<String> comPorts = new ArrayList<String>();
     long baudRate = 115200;
     int lastPort;
     int okCount = 0;
+    boolean initSent;
 
     public void listPorts() {
         //  initialize your serial port and set the baud rate to 9600
@@ -30,6 +32,7 @@
         if (myPort != null)
             myPort.stop();
         myPort = null;
+
 
         //  myTextarea.setVisible(false);
     }
@@ -147,14 +150,18 @@
 
 
     public void initArduino() {
+        initSent = true;
+        sendSpecs();
         sendHome();
         sendSpeed();
-        sendSpecs();
+
     }
 
     public void clearQueue() {
         buf.clear();
         okCount = 0;
+        lastCmd = null;
+        initSent = false;
     }
 
     public void queue(String msg) {
@@ -167,7 +174,7 @@
     public void nextMsg() {
         if (buf.size() > 0) {
             String msg = buf.get(0);
-            //print("sending "+msg);
+           // print("sending "+msg);
             oksend(msg);
             buf.remove(0);
         } else {
@@ -180,18 +187,19 @@
 
     public void send(String msg) {
 
-        if (okCount >= 0)
+        if (okCount == 0)
             oksend(msg);
         else
             queue(msg);
     }
 
     public void oksend(String msg) {
-        okCount--;
         print(msg);
 
         if (myPort != null) {
             myPort.write(msg);
+            lastCmd = msg;
+            okCount--;
             myTextarea.setText(" " + msg);
         }
     }
@@ -205,20 +213,24 @@
         val = myPort.readStringUntil('\n');
         if (val != null) {
             val = trim(val);
-
-            if (val.contains("wait"))
-                okCount = 0;
-            else
+            if (!val.contains("wait"))
                 println(val);
-            String[] tokens = val.split(" ");
-            if (tokens[0].startsWith("Free")) {
-                initArduino();
-                okCount++;
-                nextMsg();
-            }
-
-            if (tokens[0].startsWith("ok")) {
-                okCount++;
+                
+            if (val.contains("wait"))
+            {
+                okCount = 0;
+                if(!initSent)
+                  initArduino();
+                else
+                  nextMsg();
+            }          
+            else if(val.contains("Resend") && lastCmd != null)
+            {
+              okCount=0;
+              oksend(lastCmd);
+            }            
+            else if (val.contains("ok")) {
+                okCount=0;
                 nextMsg();
             }
         }
