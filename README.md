@@ -3,7 +3,7 @@ PenPlotter controller that uses repetier firmware. Inspired by work at http://ww
 
 I built a plotter like the one described on the polargraph site. I thought it would be a good way to play around with stepper motor control. The software provided by the site worked great, but I wanted to play around with creating my own version to better understand the controls.
 
-First I decided to use the repetier 3d printer control firmware https://github.com/repetier/Repetier-Firmware as a base. As I used this for the 3d Printer I built. It provides very smooth motor control with good path planning so the drawing is much smother. I modified the firmware to support the polar coordinates. The firmware uses standard gcodes with mm units, while the original controller uses a custom command set and native polar coordinates.  So the original controller was not going to talk with the new firmware.
+First I decided to use the repetier 3d printer control firmware https://github.com/repetier/Repetier-Firmware as a base. As I used this for the 3d Printer I built. It provides very smooth motor control with good path planning so the drawing is much smoother. I modified the firmware to support the polar coordinates. The firmware uses standard gcodes with mm units, while the original controller uses a custom command set and native polar coordinates.  So the original controller was not going to talk with the new firmware.
 
 Next I wrote a simpler version of the controller that speaks gcode and uses mm units. Here is a list of some of the features of the controller.
 
@@ -41,9 +41,10 @@ Next I wrote a simpler version of the controller that speaks gcode and uses mm u
     - Hatch: a cross hatch style similar to blackstripes
     - Diamond: Diamond shaped pixels similar to the original poloar graph
     - Square: Simple square wave pixes. 
-    - Stipple: Stippled similar to stipplegen program.
+    - Stipple: Stippled similar to stipplegen program. You need to pause the stipple generation before plotting or exporting.
 - Export
   - All formats (except Diamond) can be exported to standard gcode files.
+  - Comments are added to the export file to indicate the original file name and image settings.
 - The controller runs in processing 2 or processing 3
 
 #Compiling
@@ -61,7 +62,7 @@ The firmware is compiled using the arduino IDE. Download the code and load the R
   - machine.motors.mmPerRev=80.0
   - machine.motors.stepsPerRev=6400.0  
 - Launch the controller 
-- Connect to the controller to the board using the connect menu (select the same com port the arduino ide was using)
+- Connect the controller to the board using the connect menu (select the same com port the arduino IDE was using)
 - Manually position the gondola over the home point and hit the set Home button to sync the controllers and plotters home location.
 - Load a file with the load button, the file extension determines the type so make sure it is one of the supported types
 - Adjust the scale 
@@ -71,13 +72,14 @@ The firmware is compiled using the arduino IDE. Download the code and load the R
 #Not so obvious GUI controls 
 -	There is a status line right under the connect menu that shows the last command sent to the plotter
 -	The little blue circles at the top represent the motors and will go red when the motors are powered. Hit motor off button to idle the motors.
--	The little square control handles can be dragged to change the Y position and machine width and height
--	The gondola can be dragged around the page and the plotter will move to the new point.
+-	The little square control handles can be dragged to change the Y position and machine width and height.
+-	The paper size can be changed with the control handles on the edges of the paper.
+-	The gondola can be dragged around the page and the plotter will move to the new point when the mouse is released.
 -	You can adjust the placement of the plot on the page by dragging on the page canvas with the right mouse button down.
--	You can scale the page view with the scroll wheel
--	You can move the whole page by dragging with the scroll wheel pressed
--	You can crop an image with the green handles around the image frame
--	You can hit the 'c' key to open a debug console, usefull to capture and report any exceptions
+-	You can scale the page view with the scroll wheel.
+-	You can move the whole page by dragging with the scroll wheel pressed.
+-	You can crop an image with the green handles around the image frame.
+-	You can hit the 'c' key to open a debug console, usefull to capture and report any exceptions.
 
 #Screen shots
 Here are some screen shots of the controler.
