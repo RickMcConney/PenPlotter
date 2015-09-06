@@ -21,6 +21,8 @@
     PImage clearImg;
     PImage pauseImg;
     PImage plotImg;
+    PImage stepImg;
+    
     MyButton loadButton;
     MyButton plotButton;
     MyButton penUpButton;
@@ -61,11 +63,11 @@
                 .setPosition(x, y)
                 .setSize(menuWidth, 17)
                 .setRange(min, max)
-                .setColorBackground(color(115, 117, 216))
-                .setColorActive(color(201, 206, 255))
-                .setColorForeground(color(201, 206, 255))
-                .setColorCaptionLabel(color(0))
-                .setColorValue(color(0))
+                .setColorBackground(buttonUpColor)
+                .setColorActive(buttonHoverColor)
+                .setColorForeground(buttonHoverColor)
+                .setColorCaptionLabel(buttonTextColor)
+                .setColorValue(buttonTextColor)
                 .setScrollSensitivity(1)
                 .setValue(value)
                 ;
@@ -84,15 +86,15 @@
             theApplet.pushMatrix();
             if (theButton.isInside() ) {
                 if (theButton.isPressed()) { // button is pressed
-                    theApplet.fill(227, 230, 255);
+                    theApplet.fill(buttonPressColor);
                 } else { // mouse hovers the button
-                    theApplet.fill(201, 206, 255);
+                    theApplet.fill(buttonHoverColor);
                 }
             } else { // the mouse is located outside the button area
-                theApplet.fill(115, 117, 216);
+                theApplet.fill(buttonUpColor);
             }
 
-            stroke(0);
+            stroke(buttonBorderColor);
             strokeWeight(0.5f);
 
             theApplet.rect(0, 0, theButton.getWidth(), theButton.getHeight(), 8);
@@ -103,7 +105,7 @@
             int y = theButton.getHeight()/2 - theButton.getCaptionLabel().getHeight()/2;
 
             translate(x, y);
-            theButton.getCaptionLabel().setColor(0);
+            theButton.getCaptionLabel().setColor(buttonTextColor);
             theButton.getCaptionLabel().draw(theApplet);
 
             translate(-x, -y);
@@ -131,18 +133,19 @@
         clearImg= loadImage("icons/clear.png");
         pauseImg = loadImage("icons/pause.png");
         plotImg = loadImage("icons/plot.png");
+        stepImg = loadImage("icons/right.png");
 
         connectDropList = cp5.addDropdownList("dropListConnect")
                 .setPosition(leftMargin, posY)
                 .setCaptionLabel("Disconnected")
                 .onEnter(toFront)
                 .onLeave(close)
-                .setBackgroundColor(color(115, 117, 216))
-                .setColorBackground(color(115, 117, 216))
-                .setColorForeground(color(201, 206, 255))
-                .setColorActive(color(201, 206, 255))
-                .setColorCaptionLabel(color(0))
-                .setColorValue(color(0))
+                .setBackgroundColor(buttonUpColor)
+                .setColorBackground(buttonUpColor)
+                .setColorForeground(buttonHoverColor)
+                .setColorActive(buttonHoverColor)
+                .setColorCaptionLabel(buttonTextColor)
+                .setColorValue(buttonTextColor)
                 .setItemHeight(20)
                 .setBarHeight(20)
                 .setSize(menuWidth,(com.comPorts.size()+1)*20)
@@ -155,12 +158,12 @@
                 .setCaptionLabel("Hatch")
                 .onEnter(toFront)
                 .onLeave(close)
-                .setBackgroundColor(color(115, 117, 216))
-                .setColorBackground(color(115, 117, 216))
-                .setColorForeground(color(201, 206, 255))
-                .setColorActive(color(201, 206, 255))
-                .setColorCaptionLabel(color(0))
-                .setColorValue(color(0))
+                .setBackgroundColor(buttonUpColor)
+                .setColorBackground(buttonUpColor)
+                .setColorForeground(buttonHoverColor)
+                .setColorActive(buttonHoverColor)
+                .setColorCaptionLabel(buttonTextColor)
+                .setColorValue(buttonTextColor)
                 .setItemHeight(20)
                 .setBarHeight(20)
                 .setSize(menuWidth, 20 * 5)
@@ -394,7 +397,10 @@
             if(currentPlot.isPlotting() )
             {
                 if (com.myPort == null)
+                {
                     b.setCaptionLabel("Step");
+                    ((MyButton)b).setImg(stepImg);
+                }
                 else
                 {
                     b.setCaptionLabel("Abort");

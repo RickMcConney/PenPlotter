@@ -232,7 +232,7 @@
             preview.clear();
             preview.strokeWeight(0.1);
   
-            preview.stroke(0,0,0,255);
+            preview.stroke(penColor);
             preview.beginShape(LINES);
             for (int i = 0; i < penIndex; i++) {
                Path p = penPaths.get(i);
@@ -244,7 +244,7 @@
             }
             preview.endShape();
             
-            preview.stroke(0,0,0,alpha);
+            preview.stroke(plotColor);
             preview.beginShape(LINES);
             for (int i = penIndex; i < penPaths.size(); i++) {
                Path p = penPaths.get(i);

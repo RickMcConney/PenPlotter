@@ -2,7 +2,7 @@ class Plot {
         boolean loaded;
         boolean plotting;
         boolean isImage;
-        int alpha = 255;
+        int plotColor = previewColor;
         int penIndex;
         ArrayList<Path> penPaths = new ArrayList<Path>();
         PGraphics preview = null;
@@ -38,7 +38,7 @@ class Plot {
         }
 
         public void reset() {
-            alpha = 255;
+            plotColor = previewColor;
             plotting = false;
             penIndex = 0;
             plotDone();
@@ -54,7 +54,7 @@ class Plot {
         public void plot() {
           plotting = true;
           penIndex = 0;
-          alpha = 64;
+          plotColor = whilePlottingColor;
           com.sendSpecs();
           com.sendHome();
           com.sendMM();
@@ -66,7 +66,7 @@ class Plot {
         public void plottingStopped() {
           plotting = false;
           penIndex = 0;
-          alpha = 255;
+          plotColor = previewColor;
           plotDone();
           goHome();
           com.sendMotorOff();

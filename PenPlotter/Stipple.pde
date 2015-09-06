@@ -211,11 +211,11 @@
                     .setPosition(x, y)
                     .setSize(menuWidth, 17)
                     .setRange(min, max)
-                    .setColorBackground(color(115, 117, 216))
-                    .setColorActive(color(201, 206, 255))
-                    .setColorForeground(color(201, 206, 255))
-                    .setColorCaptionLabel(color(0))
-                    .setColorValue(color(0))
+                    .setColorBackground(buttonUpColor)
+                    .setColorActive(buttonHoverColor)
+                    .setColorForeground(buttonHoverColor)
+                    .setColorCaptionLabel(buttonTextColor)
+                    .setColorValue(buttonTextColor)
                     .setScrollSensitivity(1)
                     .setValue(value);
             controlP5.Label l = s.getCaptionLabel();
@@ -808,6 +808,7 @@
             float v = (brightness(imgblur.pixels[y * imgblur.width + x])) / 255;
             float dotSize = MaxDotSize - v * dotScale;
             float w = dotSize / 8;
+        
             for (int i = 0; i < 4; i++) {
                 rect(scaleX(x - dotSize / 2 + homeX - simage.width / 2 + offX + i * w), scaleY(y - dotSize / 2 + homeY + offY + i * w), zoomScale * (dotSize - (i * w * 2)), zoomScale * (dotSize - (i * w * 2)));
             }
@@ -839,7 +840,7 @@
                 penIndex++;
             } else {
                 plotDone();
-                alpha = 255;
+                plotColor = previewColor;
                 plotting = false;
             }
         }
@@ -881,10 +882,13 @@
                 ReInitiallizeArray = false;
             }
 
-            if (pausemode && (!VoronoiCalculated))
+            if(!isPlotting())
+            {
+              if (pausemode && (!VoronoiCalculated))
                 OptimizePlotPath();
-            else
+              else
                 doPhysics();
+            }
 
 
             if (pausemode) {
@@ -893,15 +897,13 @@
 
                 if (showPath) {
 
-
-                    // Stroke color (blue)
                     strokeWeight(1);
 
                     for (i = 0; i < (particleRouteLength - 1); ++i) {
                         if (i < penIndex)
-                            stroke(255, 0, 0, 255);
+                            stroke(penColor);
                         else
-                            stroke(128, 128, 255, alpha);
+                            stroke(plotColor);
                         Vec2D p1 = particles[particleRoute[i]];
                         Vec2D p2 = particles[particleRoute[i + 1]];
 
@@ -909,7 +911,7 @@
                     }
                 }
 
-                stroke(0);
+                stroke(plotColor);
 
                 for (i = 0; i < particleRouteLength; ++i) {
                     // Only show "routed" particles-- those above the white cutoff.
@@ -923,6 +925,10 @@
                     // strokeWeight (zoomScale*(MaxDotSize -  v * dotScale));
                     // point(scaleX(px+homeX-simage.width/2+offX), scaleY(py+homeY+offY));
                     strokeWeight(1);
+                    if (i < penIndex)
+                        stroke(penColor);
+                    else
+                      stroke(plotColor);
                     drawDot(px, py);
                     //  strokeWeight(0.1);
                     // spiral(px+homeX-simage.width/2+offX,py+homeY+offY,MaxDotSize -  v * dotScale);
@@ -936,7 +942,7 @@
                         strokeWeight(1);
                         noFill();
 
-                        stroke(200);
+                        stroke(plotColor);
 
                         pushMatrix();
                         Vec2D offset = new Vec2D(scaleX(homeX - simage.width / 2 + offX), scaleY(homeY + offY));
@@ -968,7 +974,7 @@
                 } else {
                     // Stipple calculation is still underway
 
-                    stroke(0);
+                    stroke(plotColor);
 
                     for (i = 0; i < cellsCalculated; ++i) {
 

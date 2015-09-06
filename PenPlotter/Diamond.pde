@@ -89,7 +89,7 @@
                 if (i < penIndex)
                     drawDiamonPixel(i, 255);
                 else
-                    drawDiamonPixel(i, alpha);
+                    drawDiamonPixel(i, 64);
             }
         }
         

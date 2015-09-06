@@ -46,7 +46,7 @@
                         cy = y1;
                     }
 
-                    stroke(drawColor);
+                    stroke(penColor);
                     sline(cx, cy, x2, y2);
                     cx = x2;
                     cy = y2;
@@ -149,7 +149,7 @@
                 else
                     sline(lastX * scaleX + homeX + offX, lastY * scaleY + homeY + offY, p.first().x * scaleX + homeX + offX, p.first().y * scaleY + homeY + offY);
 
-                stroke(penColor);
+                stroke(plotColor);
                 beginShape();
                 for (int j = 0; j < p.size(); j++) {
                     vertex(scaleX(p.getPoint(j).x * scaleX + homeX + offX), scaleY(p.getPoint(j).y * scaleY + homeY + offY));

@@ -92,8 +92,8 @@
         public void display() {
 
             noFill();
-            stroke(0);
-            strokeWeight(0.1);
+            stroke(gridColor);
+            strokeWeight(0.5);
             rect(boxx, boxy, size, size);
             if (over || press) {
                 strokeWeight(1);

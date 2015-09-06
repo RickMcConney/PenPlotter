@@ -259,18 +259,7 @@
             return path;
         }
 
-        public void drawWavePixel(int i, int a) {
-            if (i < pixels.size()) {
-                PVector r = pixels.get(i);
-                Path p = wavePath(r.x+offX,r.y+offY,r.z,false);
-                stroke(color(0,0,0, a));
-                strokeWeight(penWidth);
-                for(int j = 0;j<p.size()-1;j++)
-                {
-                    sline(p.getPoint(j).x,p.getPoint(j).y,p.getPoint(j+1).x,p.getPoint(j+1).y);
-                }
-            }
-        }
+
 
         public void drawPreview()
         {
@@ -285,7 +274,7 @@
             preview.clear();
             preview.strokeWeight(0.1);
   
-            preview.stroke(0,0,0,255);
+            preview.stroke(penColor);
             preview.beginShape();
             for (int i = 0; i < penIndex; i++) {
                Path p = penPaths.get(i);
@@ -296,7 +285,7 @@
             }
             preview.endShape();
             
-            preview.stroke(0,0,0,alpha);
+            preview.stroke(plotColor);
             preview.beginShape();
             for (int i = penIndex; i < penPaths.size(); i++) {
                Path p = penPaths.get(i);

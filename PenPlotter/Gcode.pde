@@ -317,7 +317,7 @@
                Path p = penPaths.get(i);
 
 
-               preview.stroke(0, 0, 255,255);         
+               preview.stroke(penColor);         
                for(int j = 0;j<p.size();j++)
                {                
                  preview.vertex(p.getPoint(j).x*userScale * flipX , p.getPoint(j).y*userScale * flipY );
@@ -331,14 +331,14 @@
                Path p = penPaths.get(i);
                preview.beginShape(); 
 
-               preview.stroke(0, 255, 0,alpha); 
+               preview.stroke(rapidColor); 
                
                preview.vertex(p.getPoint(0).x*userScale * flipX , p.getPoint(0).y*userScale * flipY ); 
                if(p.size()> 1)
                 preview.vertex(p.getPoint(1).x*userScale * flipX , p.getPoint(1).y*userScale * flipY ); 
                preview.endShape(); 
                preview.beginShape();  
-               preview.stroke(255, 0, 0,alpha);     
+               preview.stroke(plotColor);     
                for(int j = 0;j<p.size();j++)
                {                
                  preview.vertex(p.getPoint(j).x*userScale * flipX , p.getPoint(j).y*userScale * flipY );
@@ -356,23 +356,30 @@
               image(preview, scaleX(offX+ homeX), scaleY(offY +homeY), preview.width * zoomScale, preview.height * zoomScale);
             
         }
+        
         public void draw() {
             float lastX = -offX / (userScale * flipX);
             float lastY = -offY / (userScale * flipY);
             RPoint cur;
-            for (Path p : penPaths) {
+            for (int i = 0; i < penPaths.size(); i++) {
+               Path p = penPaths.get(i);
                 for (int j = 0; j < p.size(); j++) {
                     if (j == 0)
-                        stroke(0, 255, 0);
+                        stroke(rapidColor);
                     else
-                        stroke(255, 0, 0);
+                    {
+                      if(i< penIndex)
+                        stroke(penColor);
+                      else
+                        stroke(plotColor);
+                    }
                     cur = p.getPoint(j);
                     sline(lastX * userScale * flipX + offX + homeX, lastY * userScale * flipY + offY + homeY, cur.x * userScale * flipX + offX + homeX, cur.y * userScale * flipY + offY + homeY);
                     lastX = cur.x;
                     lastY = cur.y;
                 }
             }
-            stroke(0, 255, 0);
+            stroke(rapidColor);
             sline(lastX * userScale * flipX + offX + homeX, lastY * userScale * flipY + offY + homeY, homeX, homeY);
         }
 
@@ -442,7 +449,7 @@
                 if (x != lastX || y != lastY) {
 
                     if (cmd.equals("G0")) {
-
+                        penIndex++;
                         com.sendPenUp();
                         com.sendMoveG0((x + offX + homeX), (y + offY + homeY));
                         com.sendPenDown();

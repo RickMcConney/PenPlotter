@@ -111,16 +111,28 @@ import java.awt.BorderLayout;
     boolean overBottom = false;
     boolean motorsOn = false;
 
-    int penColor = color(0, 0, 255);
+
     int pageColor = color(255, 255, 255);
+    int machineColor = color(250,250,250);
     int backgroundColor = color(192, 192, 192);
     int gridColor = color(128, 128, 128);
-    int selectColor = color(0, 255, 0);
+    int cropColor = color(0, 255, 0);
     int textColor = color(0, 0, 255);
+    int gondolaColor = color(0, 0, 0,128);
+    int statusColor = color(0, 0, 0);
     int motorOnColor = color(255, 0, 0);
     int motorOffColor = color(0, 0, 255);
-    int drawColor = color(255,0,0);
-    int rapidColor = color(0,255,0);
+    
+    int penColor = color(0, 0, 0,255);    
+    int previewColor = color(0,0,0,255);
+    int whilePlottingColor = color(0,0,0,64);
+    int rapidColor = color(0,255,0,64);
+    
+    int buttonPressColor = color(227, 230, 255);
+    int buttonHoverColor = color(201, 206, 255);
+    int buttonUpColor = color(115, 117, 216);
+    int buttonTextColor = color(0,0,0);
+    int buttonBorderColor = color(0,0,0);
 
     Plot currentPlot = new Plot();
     float lastX = 0;
@@ -571,9 +583,10 @@ void initLogging()
         background(backgroundColor);
 
         drawPage();
-        drawPaper();
         drawOrigin();
-        drawTicks();
+        drawTicks(); 
+        drawPaper();
+
         for (Handle handle : handles) {
             handle.update();
             handle.display();
@@ -583,7 +596,7 @@ void initLogging()
         {
             currentPlot.draw();
         }
-        
+      
         drawGondola();
 
 
@@ -615,8 +628,8 @@ void initLogging()
           totalMemory = Runtime.getRuntime().totalMemory()/1000000;
           lastTime = millis();
         }
-        stroke(0);
-        fill(0);
+        stroke(statusColor);
+        fill(statusColor);
         text("FPS: "+nf(rate,2,0) +"  Mem: "+freeMemory+"/"+totalMemory+"M",10,height-4);
         String status = " Size: "+machineWidth+"x"+machineHeight +" Zoom: "+nf(zoomScale, 0, 2);
         status += " X: "+nf(currentX, 0, 2)+" Y: "+nf(currentY, 0, 2);
@@ -629,7 +642,7 @@ void initLogging()
 
     public void drawGondola()
     {
-        stroke(textColor);
+        stroke(gondolaColor);
         strokeWeight(2);
         line(scaleX(0), scaleY(0), scaleX(currentX), scaleY(currentY));
         line(scaleX(machineWidth), scaleY(0), scaleX(currentX), scaleY(currentY));
@@ -647,27 +660,31 @@ void initLogging()
     {
         stroke(gridColor);
         strokeWeight(2);
-        fill(pageColor);
+        fill(machineColor);
         rect(scaleX(0), scaleY(0), machineWidth*zoomScale, machineHeight*zoomScale);
 
     }
 
     public void drawPaper()
     {
-        noFill();
+        fill(pageColor);
         stroke(gridColor);
         strokeWeight(0.4f);
         float pWidth = paperWidth*25.4f;
         float pHeight = paperHeight*25.4f;
-        rect(scaleX(homeX - pWidth / 2), scaleY(homeY), pWidth * zoomScale, pHeight * zoomScale);
         rect(scaleX(homeX - pHeight / 2), scaleY(homeY), pHeight * zoomScale, pWidth * zoomScale);
+        rect(scaleX(homeX - pWidth / 2), scaleY(homeY), pWidth * zoomScale, pHeight * zoomScale);
+     //   noFill();
+     //   rect(scaleX(homeX - pWidth / 2), scaleY(homeY), pWidth * zoomScale, pHeight * zoomScale);
+     //   rect(scaleX(homeX - pHeight / 2), scaleY(homeY), pHeight * zoomScale, pWidth * zoomScale);
+        
 
     }
 
     public void drawImageFrame()
     {
         noFill();
-        stroke(selectColor);
+        stroke(cropColor);
         strokeWeight(2);
         line(cropLeft, cropTop, cropRight, cropTop);
         line(cropRight, cropTop, cropRight, cropBottom);
@@ -683,8 +700,8 @@ void initLogging()
     {
         if (overCropLeft(startX, startY))
         {
-          fill(selectColor);
-          stroke(selectColor);
+          fill(cropColor);
+          stroke(cropColor);
           rect(cropLeft, cropTop+(cropBottom-cropTop)/2-5, 10, 10);
             cropLeft = mouseX;
             if (cropLeft < imageX)
@@ -693,8 +710,8 @@ void initLogging()
                 cropLeft = cropRight-20;
         } else if (overCropRight(startX, startY))
         {
-          fill(selectColor);
-          stroke(selectColor);
+          fill(cropColor);
+          stroke(cropColor);
           rect(cropRight-10, cropTop+(cropBottom-cropTop)/2-5, 10, 10);
           
             cropRight = mouseX;
@@ -704,8 +721,8 @@ void initLogging()
                 cropRight = imageX+imageWidth;
         } else if (overCropTop(startX, startY))
         {
-          fill(selectColor);
-          stroke(selectColor);
+          fill(cropColor);
+          stroke(cropColor);
           rect(cropLeft+(cropRight-cropLeft)/2-5, cropTop, 10, 10);
             cropTop = mouseY;
             if (cropTop < imageY)
@@ -714,8 +731,8 @@ void initLogging()
                 cropTop = imageY+imageHeight-20;
         } else if (overCropBottom(startX, startY))
         {
-          fill(selectColor);
-          stroke(selectColor);
+          fill(cropColor);
+          stroke(cropColor);
           rect(cropLeft+(cropRight-cropLeft)/2-5, cropBottom-10, 10, 10);
             cropBottom = mouseY;
             if (cropBottom < imageY-20)
