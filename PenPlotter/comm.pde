@@ -89,9 +89,19 @@
         send("G2 X" + x + " Y" + y + " I" + i + " J" + j + "\n");
         updatePos(x, y);
     }
+    
+    public void sendG2(float x, float y, float r) {
+        send("G2 X" + x + " Y" + y + " R" + r+"\n");
+        updatePos(x, y);
+    }
 
     public void sendG3(float x, float y, float i, float j) {
         send("G3 X" + x + " Y" + y + " I" + i + " J" + j + "\n");
+        updatePos(x, y);
+    }
+    
+    public void sendG3(float x, float y, float r) {
+        send("G3 X" + x + " Y" + y + " R" + r+"\n");
         updatePos(x, y);
     }
 

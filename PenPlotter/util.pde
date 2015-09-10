@@ -34,7 +34,6 @@ JFileChooser fc;
  }
                                         
     public class MyFileChooser extends JFileChooser {
-    private File file = new File("");
     private String name;
     
     public String getName()
@@ -78,7 +77,6 @@ JFileChooser fc;
         if(getDialogType() == SAVE_DIALOG) {
             if(file != null) {
                 super.setSelectedFile(file);
-                this.file = file;
             }
         }
     }

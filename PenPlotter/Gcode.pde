@@ -404,7 +404,7 @@
 
             float I = Float.NaN;
             float J = Float.NaN;
-            double R = 0;
+            float R = 0;
             boolean sent = false;
 
 
@@ -437,7 +437,7 @@
                     else if (token.startsWith("J"))
                         J = Float.parseFloat(token.substring(1)) * conversion * userScale * flipY;
                     else if (token.startsWith("R"))
-                        R = Double.parseDouble(token.substring(1)) * conversion * userScale;
+                        R = Float.parseFloat(token.substring(1)) * conversion * userScale;
                 }
 
                 if (cmd.equals("")) {
@@ -462,9 +462,19 @@
                             com.sendG2((x + offX + homeX), (y + offY + homeY), I, J);
                             sent = true;
                         }
+                        else
+                        {
+                            com.sendG2((x + offX + homeX), (y + offY + homeY), R);
+                            sent = true;
+                        }
                     } else if (cmd.equals("G3")) {
                         if (!Float.isNaN(I) && !Float.isNaN(J)) {
                             com.sendG3((x + offX + homeX), (y + offY + homeY), I, J);
+                            sent = true;
+                        }
+                        else
+                        {
+                            com.sendG3((x + offX + homeX), (y + offY + homeY), R);
                             sent = true;
                         }
                     }

@@ -53,9 +53,17 @@ class Export extends Com
     public void sendG2(float x, float y, float i, float j) {
         send("G2 X" + (x-originX) + " Y" + (y-originY) + " I" + i + " J" + j + "\n");
     }
+    
+    public void sendG2(float x, float y, float r) {
+        send("G2 X" + (x-originX) + " Y" + (y-originY) + " R" + r + "\n");
+    }
 
     public void sendG3(float x, float y, float i, float j) {
         send("G3 X" + (x-originX) + " Y" + (y-originY) + " I" + i + " J" + j + "\n");
+    }
+    
+    public void sendG3(float x, float y, float r) {
+        send("G3 X" + (x-originX) + " Y" + (y-originY) + " R" + r + "\n");
     }
 
     public void sendSpeed(int speed) {
