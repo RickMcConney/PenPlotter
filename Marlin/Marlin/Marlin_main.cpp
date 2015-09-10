@@ -3240,6 +3240,7 @@ Sigma_Exit:
     break;
 
     #if NUM_SERVOS > 0
+    case 340: // repetier is 340
     case 280: // M280 - set servo position absolute. P: servo index, S: angle or microseconds
       {
         int servo_index = -1;
