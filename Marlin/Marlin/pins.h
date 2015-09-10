@@ -593,9 +593,9 @@
 
   #else
 
-    #define X_STEP_PIN         54
-    #define X_DIR_PIN          55
-    #define X_ENABLE_PIN       38
+    #define X_STEP_PIN         36 //54
+    #define X_DIR_PIN          34 //55
+    #define X_ENABLE_PIN       30 //38
     #define X_MIN_PIN           -1 //3
     #define X_MAX_PIN           -1 //2
 
@@ -611,9 +611,9 @@
     #define Z_MIN_PIN          18
     #define Z_MAX_PIN          19
 
-    #define Y2_STEP_PIN        36
-    #define Y2_DIR_PIN         34
-    #define Y2_ENABLE_PIN      30
+    #define Y2_STEP_PIN        54 //36
+    #define Y2_DIR_PIN         55 //34
+    #define Y2_ENABLE_PIN      38 //30
 
     #define Z2_STEP_PIN        36
     #define Z2_DIR_PIN         34

@@ -579,14 +579,21 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
       SERIAL_PROTOCOL(polarLastA);
       SERIAL_PROTOCOLPGM(" LB:");
       SERIAL_PROTOCOL(polarLastB);
-      SERIAL_PROTOCOL("\n");
-    */  
+*/
+      
     target[X_AXIS] = lround((aPos-polarLastA)*axis_steps_per_unit[X_AXIS]);
     target[Y_AXIS] = lround((bPos-polarLastB)*axis_steps_per_unit[Y_AXIS]);
+    position[X_AXIS] = 0;
+    position[Y_AXIS] = 0;
     polarLastA = aPos;
     polarLastB = bPos;
-    
-
+/*    
+      SERIAL_PROTOCOLPGM(" TX:");
+      SERIAL_PROTOCOL(target[X_AXIS]);
+      SERIAL_PROTOCOLPGM(" TY:");
+      SERIAL_PROTOCOL(target[Y_AXIS]);
+      SERIAL_PROTOCOL("\n"); 
+*/
       
   #endif
 
