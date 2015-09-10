@@ -266,6 +266,7 @@
             if(preview == null)
             {
               preview = createGraphics(machineWidth,machineHeight);
+            
               preview.beginDraw();
               preview.clear();
               preview.endDraw();

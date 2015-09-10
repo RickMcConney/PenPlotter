@@ -205,7 +205,7 @@ import java.awt.BorderLayout;
 
     public void setup() {
 
-        size(840, 650);
+        size(840, 650, JAVA2D);
         //surface.setResizable(true);
         frame.setResizable(true);
         changeAppIcon( loadImage(ICON) );

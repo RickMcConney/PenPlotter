@@ -216,7 +216,7 @@
             if (!val.contains("wait"))
                 println(val);
                 
-            if (val.contains("wait"))
+            if (val.contains("wait") || val.contains("echo"))
             {
                 okCount = 0;
                 if(!initSent)
