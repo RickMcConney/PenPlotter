@@ -318,9 +318,9 @@ STEPPER_CURRENT_CONTROL
 
 #ifdef RAMPS_V_1_3
 
-#define ORIG_X_STEP_PIN         36 //54
-#define ORIG_X_DIR_PIN          34 //55
-#define ORIG_X_ENABLE_PIN       30 //38
+#define ORIG_X_STEP_PIN         36
+#define ORIG_X_DIR_PIN          34
+#define ORIG_X_ENABLE_PIN       30
 #define ORIG_X_MIN_PIN          3
 #define ORIG_X_MAX_PIN          2
 
