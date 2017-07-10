@@ -128,14 +128,14 @@
 
     public void sendPenUp() {
         send("G4 P250\n");
-        send("M340 P3 S2350\n");
+        send("M340 P3 S"+servoUpValue+"\n");
         send("G4 P250\n");
         showPenDown();
     }
 
     public void sendPenDown() {
         send("G4 P250\n");
-        send("M340 P3 S1500\n");
+        send("M340 P3 S"+servoDownValue+"\n");
         send("G4 P250\n");
         showPenUp();
     }
