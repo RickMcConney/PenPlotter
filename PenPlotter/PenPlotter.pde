@@ -110,6 +110,7 @@ import java.awt.BorderLayout;
     boolean overTop = false;
     boolean overBottom = false;
     boolean motorsOn = false;
+    boolean draw = true;
 
 
     int pageColor = color(255, 255, 255);
@@ -372,6 +373,18 @@ import java.awt.BorderLayout;
            println("control");
            initLogging();
          }
+         
+         if (key == 'd')
+         {
+           println("draw");
+           draw = true;
+         }
+         if (key == 'n')
+         {
+           println("no draw");
+           draw = false;
+         }        
+         
     }
 void initLogging()
 {
@@ -581,34 +594,37 @@ void initLogging()
     public void draw()
     {
         background(backgroundColor);
+        if(draw)
+        {
 
-        drawPage();
-        drawOrigin();
-        drawTicks(); 
-        drawPaper();
 
-        for (Handle handle : handles) {
-            handle.update();
-            handle.display();
-        }
+          drawPage();
+          drawOrigin();
+          drawTicks(); 
+          drawPaper();
+
+          for (Handle handle : handles) {
+              handle.update();
+              handle.display();
+          }
         
-        if (currentPlot.isLoaded())
-        {
-            currentPlot.draw();
-        }
+          if (currentPlot.isLoaded())
+          {
+              currentPlot.draw();
+          }
       
-        drawGondola();
+          drawGondola();
 
 
 
-        if (oimg != null)
-        {
+          if (oimg != null)
+          {
             image(oimg, imageX, imageY, imageWidth, imageHeight);
             drawImageFrame();
             drawSelector();
+          }
+
         }
-
-
 
         if (jogX != 0)
         {
