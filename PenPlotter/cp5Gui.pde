@@ -22,10 +22,14 @@
     PImage pauseImg;
     PImage plotImg;
     PImage stepImg;
+    PImage nodrawImg;
+    PImage drawImg;
     
     MyButton loadButton;
     MyButton plotButton;
     MyButton penUpButton;
+    MyButton noDrawButton;
+    
     String[] filters = {"Hatch","Diamond","Square","Stipple"};
 
     class MyButton extends Button {
@@ -134,6 +138,8 @@
         pauseImg = loadImage("icons/pause.png");
         plotImg = loadImage("icons/plot.png");
         stepImg = loadImage("icons/right.png");
+        nodrawImg = loadImage("icons/nodraw.png");
+        drawImg = loadImage("icons/draw.png");
 
         connectDropList = cp5.addDropdownList("dropListConnect")
                 .setPosition(leftMargin, posY)
@@ -217,6 +223,7 @@
         addButton("off", "Motors Off", leftMargin, posY+=ySpace);
         addButton("save", "Save", leftMargin, posY+=ySpace);
         addButton("export", "Export",leftMargin, posY+=ySpace);
+        noDrawButton = addButton("nodraw", "No Draw",leftMargin, posY+=ySpace);
 
         stipplePlot.init();
 
@@ -450,6 +457,23 @@
         {
             com.sendPenDown();
         }
+    }
+    
+    public void nodraw(ControlEvent theEvent)
+    {
+      Button b = (Button) theEvent.getController();
+      if(b.getCaptionLabel().getText().indexOf("No") >=0)
+      {
+          noDrawButton.setCaptionLabel("Draw");
+          noDrawButton.setImg(drawImg);
+          draw = false;
+      }
+      else
+      {
+          noDrawButton.setCaptionLabel("No Draw");
+          noDrawButton.setImg(nodrawImg);
+          draw = true;
+      }
     }
 
     public void goHome()

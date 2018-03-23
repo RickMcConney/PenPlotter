@@ -206,7 +206,7 @@ import java.awt.BorderLayout;
 
     public void setup() {
 
-        size(840, 650, JAVA2D);
+        size(840, 680, JAVA2D);
         //surface.setResizable(true);
         frame.setResizable(true);
         changeAppIcon( loadImage(ICON) );
@@ -653,7 +653,7 @@ void initLogging()
         status += " B: "+nf(getMachineB(currentX, currentY), 0, 2);
         if(currentPlot.isLoaded())
           status += " Plot: "+currentPlot.progress();
-        text(status, 150, height-4);
+        text(status, 160, height-4);
     }
 
     public void drawGondola()
