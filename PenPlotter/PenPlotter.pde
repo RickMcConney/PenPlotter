@@ -594,6 +594,8 @@ void initLogging()
     public void draw()
     {
         background(backgroundColor);
+        // I put the if(draw) arround all the drawing routines see if just placing it around the drawing of the image 
+        // below is enough
         if(draw)
         {
 
@@ -616,7 +618,7 @@ void initLogging()
           drawGondola();
 
 
-
+          // try just skipping the image draw here
           if (oimg != null)
           {
             image(oimg, imageX, imageY, imageWidth, imageHeight);
