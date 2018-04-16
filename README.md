@@ -53,6 +53,8 @@ The code is dependent of the controlP5, geomerative and toxi libraries go to the
 
 The firmware is compiled using the arduino IDE. Download the code and load the Repitier.ino into arduino. I have only tested with the mega board with the ramps 1.4 shield. However repetier works with many boards so you may need to change the board type in the configuration.h file if you are using a different board.
 
+*WARNING* The X axis pins were chaged in the Marlin pins.h file to use the E1 port this was for compatibility with the original pen plotter pins. So you need to connect the X axis motor to the E1 port or change the pins back in the pins.h file line 596-616 remove the pin numbers to leave the oriinal commented pins.
+
 *WARNING* I changed the X Y and ZAXIS_STEPS_PER_MM defines in the configuragion.h to 1mm as I do my own mm to polar conversion based on the machine specs described above so make sure if you change boards the setting remains at 1.
 
 #Usage
