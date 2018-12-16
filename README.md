@@ -7,6 +7,8 @@ First I decided to use the repetier 3d printer control firmware https://github.c
 
 Next I wrote a simpler version of the controller that speaks gcode and uses mm units. Here is a list of some of the features of the controller.
 
+Solenoid or servo can be used. Solenoid are connected to FAN pins.
+
 # Features
 - Supports Gcode files (.gcode, .cnc, .nc, .g, .gco)
   - Standard Gcodes G0, G1, G2, G3 are supported for movement.

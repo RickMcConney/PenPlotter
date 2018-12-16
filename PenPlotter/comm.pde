@@ -125,19 +125,40 @@
     public void sendSpecs() {
         send("M4 X" + machineWidth + " E" + penWidth + " S" + stepsPerRev + " P" + mmPerRev + "\n");
     }
-
+    
     public void sendPenUp() {
-        send("G4 P250\n");
-        send("M340 P3 S"+servoUpValue+"\n");
-        send("G4 P250\n");
-        showPenDown();
+     if (useSolenoid == true) {
+       send("G4 P"+servoDwell+"\n");//pause
+       if (solenoidUP == 1) {
+          send("M107"+"\n");
+       } else {
+         send("M106"+"\n");
+       }
+       send("G4 P"+servoDwell+"\n");//pause
+     } else {
+      send("G4 P"+servoDwell+"\n");//pause
+      send("M340 P3 S"+servoUpValue+"\n");
+      send("G4 P"+servoDwell+"\n");
+     }
+     showPenDown();
     }
+    
 
     public void sendPenDown() {
-        send("G4 P250\n");
+    if (useSolenoid == true) {
+         send("G4 P"+servoDwell+"\n");//pause
+         if (solenoidUP == 1) {
+            send("M106"+"\n");
+         } else {
+           send("M107"+"\n");
+         }
+         send("G4 P"+servoDwell+"\n");//pause
+       } else {
+        send("G4 P"+servoDwell+"\n");
         send("M340 P3 S"+servoDownValue+"\n");
-        send("G4 P250\n");
-        showPenUp();
+        send("G4 P"+servoDwell+"\n");
+      }
+      showPenUp();
     }
 
     public void sendAbsolute() {
