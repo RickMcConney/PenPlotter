@@ -92,9 +92,19 @@ class Export extends Com
           send("G0 Z"+cncSafeHeight+"\n");
         else
         {
-          send("G4 P"+servoDwell+"\n");
-          send("M340 P3 S"+servoUpValue+"\n");
-          send("G4 P"+servoDwell+"\n");
+           if (useSolenoid == true) {
+             send("G4 P"+servoDwell+"\n");//pause
+             if (solenoidUP == 1) {
+                send("M107"+"\n");//OFF
+             } else {
+               send("M106"+"\n");//ON
+             }
+             send("G4 P"+servoDwell+"\n");//pause
+           } else {
+            send("G4 P"+servoDwell+"\n");//pause
+            send("M340 P3 S"+servoUpValue+"\n");
+            send("G4 P"+servoDwell+"\n");
+           }
         }
     }
 
@@ -103,9 +113,19 @@ class Export extends Com
         send("G0 Z0\n");
       else
       {
-        send("G4 P"+servoDwell+"\n");
-        send("M340 P3 S"+servoDownValue+"\n");
-        send("G4 P"+servoDwell+"\n");
+        if (useSolenoid == true) {
+             send("G4 P"+servoDwell+"\n");//pause
+             if (solenoidUP == 1) {
+                send("M106"+"\n");//ON
+             } else {
+               send("M107"+"\n");//OFF
+             }
+             send("G4 P"+servoDwell+"\n");//pause
+           } else {
+            send("G4 P"+servoDwell+"\n");
+            send("M340 P3 S"+servoDownValue+"\n");
+            send("G4 P"+servoDwell+"\n");
+           }
       }
     }
 

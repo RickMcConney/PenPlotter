@@ -160,6 +160,8 @@ import java.awt.BorderLayout;
     long lastTime = millis();
     long freeMemory;
     long totalMemory;
+    boolean useSolenoid = false; //If used solinoid as lifting pen
+    int solenoidUP = 1;//Solinoid on or off when UP 
     int servoDwell = 250;
     int servoUpValue = 2350;
     int servoDownValue = 1500;
